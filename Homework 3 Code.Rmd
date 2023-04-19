@@ -1,0 +1,29 @@
+---
+title: "Homework 3"
+author: "Bailey Ho | Daria Barbour-Brown | Warren Kennedy"
+date: "Spring 2023"
+output:
+  pdf_document: default
+  html_document: default
+---
+
+# Conceptual Problems
+
+## Question 1
+If we don't know how many clusters to organize our data in, we can take a "brute-force" approach by trying different values of K. After trying different values of K, we can use various methods to assess which value of K minimizes the within cluster variation, in Layman's terms, which describes how closely knit each cluster is. One such method is known as the "Elbow" method, where we graph the total within variation vs. K. We then observe the Kth value for which the curve begins to "flatten" telling us that after a certain K, additional clusters no longer provide us with important information.
+
+## Application Problems
+
+## Question 2
+```{r}
+library(ISLR2)
+data <- iris
+plot(data$Sepal.Length,data$Petal.Width,
+  xlab = "Sepal Length", ylab = "Petal Width",
+  col = data$Species)
+```
+
+## Question 3
+```{r}
+km3 <- kmeans(data, 3, nstart = 20)
+```
