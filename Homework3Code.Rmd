@@ -3,9 +3,11 @@ title: "Homework 3"
 author: "Bailey Ho | Daria Barbour-Brown | Warren Kennedy"
 date: "Spring 2023"
 output:
-  html_document: default
   pdf_document: default
+  html_document: default
 ---
+
+***Note:*** All group members contributed equally.
 
 ## Conceptual Problems
 
@@ -13,14 +15,17 @@ output:
 
 If we don't know how many clusters to organize our data in, we can take a "brute-force" approach by trying different values of K. After trying different values of K, we can use various methods to assess which value of K minimizes the within cluster variation, in Layman's terms, which describes how closely knit each cluster is. One such method is known as the "Elbow" method, where we graph the total within variation vs. K. We then observe the Kth value for which the curve begins to "flatten" telling us that after a certain K, additional clusters no longer provide us with important information.
 
+```{r}
+library(ISLR2)
+library(fpc)
+library(RSSL)
+```
+
 ## Application Problems
 
 ### Question 2
 
 ```{r}
-library(ISLR2)
-library(fpc)
-library(RSSL)
 data <- iris
 plot(data$Sepal.Length,data$Petal.Width,
   xlab = "Sepal Length", ylab = "Petal Width", col = data$Species)
@@ -28,13 +33,22 @@ plot(data$Sepal.Length,data$Petal.Width,
 
 ### Question 3
 
-We want only the columns that contain numerical data (subtracting 'Species' feature).
+#### Part A
+
+For this calculation, we want only the columns that contain numerical data so remove the column with non-numerical data.
 
 ```{r}
 km3 <- kmeans(data[,1:4], 3, nstart = 20)
 km3$withinss
+```
+
+#### Part B
+
+```{r}
 km3$betweenss
 ```
+
+#### Part
 
 ```{r}
 plot(data$Sepal.Length, data$Petal.Width, col = (km3$cluster), 
@@ -45,18 +59,28 @@ legend("topright",c("cluster1","cluster2", "cluster3"), pch=c(1,2,3))
 
 ### Question 4
 
-##### Plot of K-Means
+#### Part A
+
 ```{r}
 data2 <- read.csv("homework3_clustering.csv")
 plot(data2$V1, data2$V2)
+```
+
+#### Part B
+
+```{r}
 km2 <- kmeans(data2, 2)
+```
+
+```{r}
 plot(data2$V1, data2$V2, col = (km2$cluster), 
      main = "K-Means Clustering Results with K = 2",xlab = "V1", 
      ylab = "V2", cex = .5, )
 legend("topright",c("cluster1","cluster2"), col=c("black", "red"), lty=1:1)
 ```
 
-##### Plot of DB Scan
+#### Part
+
 ```{r}
 dbscan_data2 <- dbscan(data2, eps = .5, MinPts = 5)
 plot(data2$V1, data2$V2, col = dbscan_data2$cluster, 
@@ -64,6 +88,6 @@ plot(data2$V1, data2$V2, col = dbscan_data2$cluster,
 legend("topright",c("cluster1","cluster2"), col=c("black", "red"), lty=1:1)
 ```
 
-#### Analysis
+#### Part D
 
-This process results in spherical clusting that misrepresents our non-spherical clusters of data. DBSCAN detects alturnitive shapes in the data by identifying clusters based on density. As our data is shaped into two visible elipses, DBSCANS provides us with a much better clustered representation.
+We expected the DB Scan to give us better results due to the algorithm used to choose clusters. While the K-means algorithm attempts to cluster the data by measuring the distance of each data point to a set of central points, DB Scan clusters the data by grouping lower density areas and higher density areas separately. In this case, the density-based DB Scan method is able to better detect the distinct groupings that we can see in the data. The K-means algorithm was not able to detect this shape, yielding a less informative result.
