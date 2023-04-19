@@ -3,8 +3,8 @@ title: "Homework 3"
 author: "Bailey Ho | Daria Barbour-Brown | Warren Kennedy"
 date: "Spring 2023"
 output:
-  pdf_document: default
   html_document: default
+  pdf_document: default
 ---
 
 ## Conceptual Problems
@@ -19,6 +19,8 @@ If we don't know how many clusters to organize our data in, we can take a "brute
 
 ```{r}
 library(ISLR2)
+library(fpc)
+library(RSSL)
 data <- iris
 plot(data$Sepal.Length,data$Petal.Width,
   xlab = "Sepal Length", ylab = "Petal Width", col = data$Species)
@@ -43,6 +45,18 @@ legend("topright",c("cluster1","cluster2", "cluster3"), pch=c(1,2,3))
 
 ### Question 4
 
+##### Plot of K-Means
+```{r}
+data2 <- read.csv("homework3_clustering.csv")
+plot(data2$V1, data2$V2)
+km2 <- kmeans(data2, 2)
+plot(data2$V1, data2$V2, col = (km2$cluster), 
+     main = "K-Means Clustering Results with K = 2",xlab = "V1", 
+     ylab = "V2", cex = .5, )
+legend("topright",c("cluster1","cluster2"), col=c("black", "red"), lty=1:1)
+```
+
+##### Plot of DB Scan
 ```{r}
 dbscan_data2 <- dbscan(data2, eps = .5, MinPts = 5)
 plot(data2$V1, data2$V2, col = dbscan_data2$cluster, 
