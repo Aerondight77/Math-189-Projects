@@ -48,7 +48,7 @@ km3$withinss
 km3$betweenss
 ```
 
-#### Part
+#### Part C
 
 ```{r}
 plot(data$Sepal.Length, data$Petal.Width, col = (km3$cluster), 
@@ -79,7 +79,7 @@ plot(data2$V1, data2$V2, col = (km2$cluster),
 legend("topright",c("cluster1","cluster2"), col=c("black", "red"), lty=1:1)
 ```
 
-#### Part
+#### Part C
 
 ```{r}
 dbscan_data2 <- dbscan(data2, eps = .5, MinPts = 5)
