@@ -50,7 +50,7 @@ km3$betweenss
 
 #### Part C
 
-```{r}
+```{r, echo=TRUE}
 plot(data$Sepal.Length, data$Petal.Width, col = (km3$cluster), 
      main = "K-Means Clustering Results with K = 3",xlab = "Sepal Length", 
      ylab = "Petal Width", cex = 2, pch=as.numeric(km3$cluster))
