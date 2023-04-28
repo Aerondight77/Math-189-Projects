@@ -1,0 +1,111 @@
+---
+title: "Homework 4: Hypothesis Testing"
+author: |
+  |Daria Barbour-Brown
+  |Bailey Ho
+  |Warren Kennedy
+date: "Last Updated: `r format(Sys.time(), '%B %d, %Y')`"
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+# Conceptual Question
+
+## Question 1
+
+A type one error means that we have rejected the null hypothesis when the null hypothesis is in fact true. A type two error occurs when we fail to reject the null hypothesis when the null hypothesis is in fact false. We cannot make a definitive claim as to whether or not a type one error is better or worse than committing a type two error, because the gravity of commiting such an error will depend entirely on how we define the null hypothesis to begin with.
+
+For example, suppose we are looking to test the efficacy of a new drug that treats headaches. We would like to know whether or not the drug has serious negative side effects. If we set our null hypothesis to be that our drug does in fact cause negative side effects in patients, a type one error would have us rejecting this null hypotheis when in fact it is true. The desision would be that the drug does not cause side effetcs and is fit for use. In this case, a type one error is severe as it puts an unsafe drug on the market.
+
+On the other hand, if our null hypothesis states that the drug does not have severe side effects, and a hypothesis test results in keeping this null hypothesis (incorrectly), the disicion would again be to appove and distribute a drug that could cause more harm than good. In this case, a type two error is of more serious consequence. 
+
+# Application Question
+
+The USDA Women’s Health Survey dataset contains five types of women’s nutrient intakes which were measured from a random sample of 737 women aged 25-50 years in United States. 
+
+## Question 2
+
+### Part A
+
+```{r}
+nutrients <- read.csv("/Users/dariabrown/Documents/GitHub/189/Math-189-Projects/Homework_4/nutrients.csv")
+
+sample.mean = sapply(nutrients, mean)
+sample.sd = sapply(nutrients, sd)
+
+```
+
+### Part B 
+
+```{r}
+
+calc.t = t.test( nutrients[,1], alternative= "two.sided", mu = 1000, conf.level = 0.95)
+iron.t = t.test( nutrients[,2], alternative= "two.sided", mu = 15, conf.level = 0.95)
+prot.t = t.test( nutrients[,3], alternative= "two.sided", mu = 60, conf.level = 0.95)
+vitA.t = t.test( nutrients[,4], alternative= "two.sided", mu = 800, conf.level = 0.95)
+vitC.t = t.test( nutrients[,5], alternative= "two.sided", mu = 75, conf.level = 0.95)
+
+```
+
+### Part C
+
+We first test to see if the average calcium levels from our sample are equal to the recommended amount of 1000mg. Our test returns a p-value of 2.2e-16, which is significantly smaller than our significance threshold of 0.05. This result implies that the true population values for calcium intake are unlikely to be equal to the recommended value, and provides strong evidence for us to reject our null hypothesis. We get a similar result when we test iron and protein levels across our sample. 
+```{r}
+pval=c(calc.t$p.value,iron.t$p.value,prot.t$p.value,vitA.t$p.value,vitC.t$p.value)
+pval[1:3]
+```
+
+Our tests of  Vitamin A and Vitamin C return p-values that are greater than our significance levels for the test -- 0.51 and 0.14 respectively. These values do not satisfy our criteria for rejecting our null hypothesis. As a result, we fail to reject our null hypothesis that the mean values from our sample our significanlty differerent from the recommended intake levels.
+
+```{r}
+pval[4:5]
+```
+
+We suggest that women in the US begin supplementing their diet with more calcium, iron, and protein as they are likely below the recommended intake level.
+
+## Question 3
+
+```{r}
+multiple <- read.table("/Users/dariabrown/Documents/GitHub/189/Math-189-Projects/Homework_4/multiple.txt", quote="\"", comment.char="")
+```
+
+### Part A
+Ho: u = 0 vs. u =! 0 
+We need to perform a two-sided t-test.
+
+```{r}
+m = 50
+pv <- numeric(m)
+for(j in 1:m){
+  t_test <- t.test(multiple[,j], alternative="two.sided", mu=0,conf.level = 0.9) 
+  pv[j] <- t_test$p.value
+}
+```
+
+### Part B
+
+```{r}
+sum(pv[1:10] > 0.1) # false negatives (We want the number of times we kept the null, and we should have rejected - Type 2 Error)
+sum(pv[11:50] < 0.1) # false positive (We want number of times we rejected null when we should have kept -type 1 error!)
+sum(pv[11:50] < 0.1)/sum(pv[1:50] < 0.1) # false discovery proportion (Type 1 Error / Total number of rejections of null)
+```
+### Part C
+
+```{r}
+bonf <- p.adjust(pv,method="bonferroni")
+sum(bonf[1:10] > 0.1) # Type 2 Error
+sum(bonf[11:50] < 0.1) # Type 1 Error
+sum(bonf < 0.1)/sum(bonf < 0.1) # false discovery proportion
+```
+
+### Part D
+
+```{r}
+bh <- p.adjust(pv,method="BH")
+sum(bh[1:10] > 0.1) # false positives
+sum(bh[11:50] < 0.1) # false negatives
+sum(bh[1:10] > 0.1)/sum(bh < 0.1) # false discovery proportion
+```
+
