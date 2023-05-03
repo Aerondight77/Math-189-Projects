@@ -1,0 +1,28 @@
+---
+title: "homework_5"
+author: "Daria Barbour-Brown"
+date: "2023-05-03"
+output: html_document
+---
+
+# Conceptual Problem
+
+## Question 1
+
+Why do we need to check modeling assumptions for linear regression?
+
+-   The first assumption we make before performing linear regression is that our data is generally linear. If the data does not seem to be linear, it does not make sense to fit it to a linear model. This is the most basic assumption necessary.
+
+-   The second important assumption we make is constant variance for each epsilon, error term. Homoscedasticity is required because it maintains consistency across all data points allowing for better regression modeling.
+
+-   Next we assume that each residual is uncorrelated with each other. Correlated residuals imply that there is a pattern in a data that the model is not capturing.
+
+-   High leverage outliers, (data points occurring outside the general range of the rest of the data) can change the regression estimates.
+
+-Finally we assume that the error terms are normally distributed which is important for making valid inference, confidence intervals and prediction intervals.
+
+If these assumption are not met, a linear regression model may not be the best fit for our data.
+
+# Aplication Questions
+
+## Question 2

@@ -1,0 +1,514 @@
+---
+title: "Linear Regression"
+author: |
+  | Daniel Ries, Ph.D.
+  | Department of Mathematics, UCSD
+  | [dcries@ucsd.edu](mailto:dcries@ucsd.edu)
+date: "Last Updated: `r format(Sys.time(), '%B %d, %Y')`"
+abstract: |
+  This document provides an introduction to linear regression in R. This lab has borrowed and modified with permission from material in *An Introduction to Statistical Learning* by James, Witten, Hastie, and Tibshirani. 
+output: 
+  html_document:
+    number_sections: yes
+    toc: yes
+editor_options: 
+  markdown: 
+    wrap: 72
+---
+
+```{r chunk1}
+library(MASS)
+library(ISLR2)
+library(ggplot2)
+```
+
+## Simple Linear Regression
+
+The `ISLR2` library contains the `Boston` data set, which records `medv`
+(median house value) for $506$ census tracts in Boston. We will seek to
+predict `medv` using $12$ predictors such as `rmvar` (average number of
+rooms per house), `age` (average age of houses), and `lstat` (percent of
+households with low socioeconomic status).
+
+```{r chunk2}
+head(Boston)
+```
+
+To find out more about the data set, we can type `?Boston`.
+
+We will start by using the `lm()` function to fit a simple linear
+regression model, with `medv` as the response and `lstat` as the
+predictor. The basic syntax is `lm(y $\sim$ x, data)`, where `y` is the
+response, `x` is the predictor, and `data` is the data set in which
+these two variables are kept.
+
+```{r chunk4}
+lm.fit <- lm(medv ~ lstat, data = Boston)
+```
+
+If we type `lm.fit`, some basic information about the model is output.
+For more detailed information, we use `summary(lm.fit)`. This gives us
+$p$-values and standard errors for the coefficients, as well as the
+$R^2$ statistic and $F$-statistic for the model.
+
+```{r chunk5}
+lm.fit
+summary(lm.fit)
+```
+
+We can use the `names()` function in order to find out what other pieces
+of information are stored in `lm.fit`. Although we can extract these
+quantities by name---e.g. `lm.fit$coefficients`---it is safer to use the
+extractor functions like `coef()` to access them.
+
+```{r chunk6}
+names(lm.fit)
+coef(lm.fit)
+```
+
+In order to obtain a confidence interval for the coefficient estimates,
+we can use the `confint()` command. Type `confint(lm.fit)` at the
+command line to obtain the confidence intervals.
+
+```{r chunk7}
+confint(lm.fit)
+```
+
+The `predict()` function can be used to produce confidence intervals and
+prediction intervals for the prediction of `medv` for a given value of
+`lstat`.
+
+```{r chunk8}
+predict(lm.fit, data.frame(lstat = (c(5, 10, 15))),
+    interval = "confidence")
+predict(lm.fit, data.frame(lstat = (c(5, 10, 15))),
+    interval = "prediction")
+```
+
+For instance, the 95,% confidence interval associated with a `lstat`
+value of 10 is $(24.47, 25.63)$, and the 95,% prediction interval is
+$(12.828, 37.28)$. As expected, the confidence and prediction intervals
+are centered around the same point (a predicted value of $25.05$ for
+`medv` when `lstat` equals 10), but the latter are substantially wider.
+
+We will now plot `medv` and `lstat` along with the least squares
+regression line, associated confidence and prediction bands, using
+`ggplot2`. Using the same `predict` function as before, we will evaluate
+the CI and PI at many points between the `min` and `max` value of
+`lstat`. The call
+`lstat_eval <- seq(from=min(Boston$lstat),to=max(Boston$lstat),length.out=100)`
+creates the object `lstat_eval` which is a sequence from the min to the
+max of lstat with an equally spaced output length of 100. The value of
+100 is arbitrary here, if you make it larger, the resolution of CI and
+PI bands will increase, if you make it smaller, the resolution will be
+more granular. We wrap the output from `predict()` with `data.frame()`
+since we need it to be a `data.frame` object to use for plotting and to
+easily add the `lstat_eval` column.
+
+`geom_abline()` is a `ggplot2` layer that allows you to plot a diagonal
+line with arguments `intercept` for the y-intercept and `slope` for the
+linear slope. We get both of these values from the `lm.fit` object using
+the `coef()` function.
+
+```{r chunk9}
+lstat_eval <- seq(from=min(Boston$lstat),to=max(Boston$lstat),length.out=100)
+ci_df <- data.frame(predict(lm.fit, data.frame(lstat = lstat_eval),
+    interval = "confidence"))
+pi_df <- data.frame(predict(lm.fit, data.frame(lstat = lstat_eval),
+    interval = "prediction"))
+# add lstat_eval to both ci_df and pi_df for ease of plotting
+ci_df$lstat_eval <- lstat_eval
+pi_df$lstat_eval <- lstat_eval
+
+ggplot() + 
+  geom_point(data=Boston,aes(x=lstat, y=medv)) + 
+  geom_abline(intercept=coef(lm.fit)[1],slope=coef(lm.fit)[2],color="red") +
+  geom_ribbon(data=ci_df,aes(x=lstat_eval,ymin=lwr,ymax=upr,fill="CI"),alpha=0.8) +
+  geom_ribbon(data=pi_df,aes(x=lstat_eval,ymin=lwr,ymax=upr,fill="PI"),alpha=0.3)
+
+```
+
+There is some evidence for non-linearity in the relationship between
+`lstat` and `medv`. We will explore this issue later in this lab.
+
+Next we examine some diagnostic plots, several of which were discussed
+in Section 3.3.3. Four diagnostic plots are automatically produced by
+applying the `plot()` function directly to the output from `lm()`. In
+general, this command will produce one plot at a time, and hitting
+*Enter* will generate the next plot. However, it is often convenient to
+view all four plots together. We can achieve this by using the `par()`
+and `mfrow()` functions, which tell `R` to split the display screen into
+separate panels so that multiple plots can be viewed simultaneously. For
+example, `par(mfrow = c(2, 2))` divides the plotting region into a
+$2 \times 2$ grid of panels.
+
+```{r chunk11}
+par(mfrow = c(2, 2))
+plot(lm.fit)
+```
+
+Alternatively, we can compute the residuals from a linear regression fit
+using the `residuals()` function. The function `rstudent()` will return
+the studentized residuals, and we can use this function to plot the
+residuals against the fitted values.
+
+```{r chunk12}
+plot(predict(lm.fit), residuals(lm.fit))
+plot(predict(lm.fit), rstudent(lm.fit))
+```
+
+On the basis of the residual plots, there is some evidence of
+non-linearity.
+
+## Multiple Linear Regression
+
+In order to fit a multiple linear regression model using least squares,
+we again use the `lm()` function. The syntax `lm(y $\sim$ x1 + x2 + x3)`
+is used to fit a model with three predictors, `x1`, `x2`, and `x3`. The
+`summary()` function now outputs the regression coefficients for all the
+predictors.
+
+```{r chunk14}
+lm.fitb <- lm(medv ~ lstat + age, data = Boston)
+summary(lm.fitb)
+```
+
+We can get model predictions, confidence intervals for mean values, and
+prediction intervals for predictions using the `predict.lm` function.
+Suppose we want predictions, 95% confidence intervals for the means, and
+95% prediction intervals for a house with 8% low socioeconomic status of
+the population and 5 years old.
+
+The prediction and 95% confidence interval is given by:
+
+```{r}
+lmfitbCI <- predict(lm.fitb,newdata=data.frame(lstat=c(8),age=5),interval=c("confidence"))
+lmfitbCI
+```
+
+The prediction and 95% prediction interval is given by:
+
+```{r}
+lmfitbPI <- predict(lm.fitb,newdata=data.frame(lstat=c(8),age=5),interval=c("prediction"))
+lmfitbPI
+```
+
+The `Boston` data set contains 12 variables, and so it would be
+cumbersome to have to type all of these in order to perform a regression
+using all of the predictors. Instead, we can use the following
+short-hand:
+
+```{r chunk15}
+lm.fitAll <- lm(medv ~ ., data = Boston)
+summary(lm.fitAll)
+```
+
+```{r chunk11b}
+par(mfrow = c(2, 2))
+plot(lm.fitAll)
+```
+
+We can access the individual components of a summary object by name
+(type `?summary.lm` to see what is available). Hence
+`summary(lm.fit)$r.sq` gives us the $R^2$, and `summary(lm.fit)$sigma`
+gives us the RSE.
+
+The `vif()` function, part of the `car` package, can be used to compute
+variance inflation factors. Most VIF's are low to moderate for this
+data. The `car` package is not part of the base `R` installation so it
+must be downloaded the first time you use it via the
+`install.packages()` function in `R`.
+
+```{r chunk16}
+library(car)
+vif(lm.fitAll)
+```
+
+Suppose we want to remove `age` from the fitted linear model. The
+`update()` function can be used.
+
+```{r chunk18}
+lm.fit1 <- update(lm.fitAll, ~ . - age)
+```
+
+## Interaction Terms
+
+It is easy to include interaction terms in a linear model using the
+`lm()` function. The syntax `lstat:black` tells `R` to include an
+interaction term between `lstat` and `black`. The syntax `lstat * age`
+simultaneously includes `lstat`, `age`, and the interaction term
+`lstat`$\times$`age` as predictors; it is a shorthand for
+`lstat + age + lstat:age`. %We can also pass in transformed versions of
+the predictors.
+
+```{r chunk19}
+summary(lm(medv ~ lstat * age, data = Boston))
+```
+
+## Non-linear Transformations of the Predictors
+
+The `lm()` function can also accommodate non-linear transformations of
+the predictors. For instance, given a predictor $X$, we can create a
+predictor $X^2$ using `I(X^2)`. The function `I()` is needed since the
+`^` has a special meaning in a formula object; wrapping as we do allows
+the standard usage in `R`, which is to raise `X` to the power `2`. We
+now perform a regression of `medv` onto `lstat` and `lstat^2`.
+
+```{r chunk20}
+lm.fit2 <- lm(medv ~ lstat + I(lstat^2),data=Boston)
+summary(lm.fit2)
+```
+
+The near-zero $p$-value associated with the quadratic term suggests that
+it leads to an improved model. The plot below shows the fitted model,
+which looks better than the linear model fit visually. Notice that
+although the `lm()` model has `~lstat + I(lstat^2)`, I only needed to
+provide a `data.frame` with a single column named `lstat` to the
+`predict` function, that is because `I(lstat^2)` is telling `R` to pull
+data from column `lstat` and square it, therefore we do not need to
+provide that column explicitly in the new `data.frame`. It may be
+concerning that the predictions start to increase for `lstat` larger
+than about 27 though.
+
+Plotting predictions, a 95% CI, and 95% PI for this model:
+
+```{r}
+lm.fit2preds <- data.frame(lstat=seq(from=min(Boston$lstat),to=max(Boston$lstat),by=0.1))
+preds_lm2 <- predict(lm.fit2,newdata=lm.fit2preds)
+lm.fit2preds$preds <- preds_lm2
+
+ci_df2 <- data.frame(predict(lm.fit2, data.frame(lstat = lstat_eval),
+    interval = "confidence"))
+pi_df2 <- data.frame(predict(lm.fit2, data.frame(lstat = lstat_eval),
+    interval = "prediction"))
+# add lstat_eval to both ci_df and pi_df for ease of plotting
+ci_df2$lstat_eval <- lstat_eval
+pi_df2$lstat_eval <- lstat_eval
+
+ggplot() +
+  geom_point(data=Boston,aes(x=lstat,y=medv)) +
+  geom_line(data=lm.fit2preds,aes(x=lstat,y=preds),color="Red",linewidth=2) +
+  geom_ribbon(data=ci_df2,aes(x=lstat_eval,ymin=lwr,ymax=upr,fill="CI"),alpha=0.8) +
+  geom_ribbon(data=pi_df2,aes(x=lstat_eval,ymin=lwr,ymax=upr,fill="PI"),alpha=0.3)
+
+```
+
+```{r chunk11c}
+par(mfrow = c(2, 2))
+plot(lm.fit2)
+```
+
+We use the `anova()` function to further quantify the extent to which
+the quadratic fit is superior to the linear fit. By default, when you
+provide `anova()` two objects of class `lm`, it will perform an F-test.
+
+```{r chunk21}
+lm.fit <- lm(medv ~ lstat,data=Boston)
+anova(lm.fit, lm.fit2)
+```
+
+Here Model 1 represents the linear submodel containing only one
+predictor, `lstat`, while Model 2 corresponds to the larger quadratic
+model that has two predictors, `lstat` and `lstat^2`. The `anova()`
+function performs a hypothesis test comparing the two models. The null
+hypothesis is that the two models fit the data equally well, and the
+alternative hypothesis is that the full model is superior. Here the
+$F$-statistic is $135$ and the associated $p$-value is virtually zero.
+This provides very clear evidence that the model containing the
+predictors `lstat` and `lstat^2` is far superior to the model that only
+contains the predictor `lstat`. This is not surprising, since earlier we
+saw evidence for non-linearity in the relationship between `medv` and
+`lstat`. If we type
+
+```{r chunk22}
+par(mfrow = c(2, 2))
+plot(lm.fit2)
+```
+
+then we see that when the `lstat^2` term is included in the model, there
+is little discernible pattern in the residuals.
+
+In order to create a cubic fit, we can include a predictor of the form
+`I(X^3)`. However, this approach can start to get cumbersome for
+higher-order polynomials. A better approach involves using the `poly()`
+function to create the polynomial within `lm()`. For example, the
+following command produces a fifth-order polynomial fit:
+
+```{r chunk23}
+lm.fit5 <- lm(medv ~ poly(lstat, 5),data=Boston)
+summary(lm.fit5)
+```
+
+This suggests that including additional polynomial terms, up to fifth
+order, leads to an improvement in the model fit! However, further
+investigation of the data reveals that no polynomial terms beyond fifth
+order have significant $p$-values in a regression fit.
+
+It is always good to look at a visual too. THe plot below shows the
+predictions from this model with CI and PI.
+
+```{r}
+lm.fit5preds <- data.frame(lstat=seq(from=min(Boston$lstat),to=max(Boston$lstat),by=0.1))
+preds_lm5 <- predict(lm.fit5,newdata=lm.fit5preds)
+lm.fit5preds$preds <- preds_lm5
+
+ci_df5 <- data.frame(predict(lm.fit5, data.frame(lstat = lstat_eval),
+    interval = "confidence"))
+pi_df5 <- data.frame(predict(lm.fit5, data.frame(lstat = lstat_eval),
+    interval = "prediction"))
+# add lstat_eval to both ci_df and pi_df for ease of plotting
+ci_df5$lstat_eval <- lstat_eval
+pi_df5$lstat_eval <- lstat_eval
+
+ggplot() +
+  geom_point(data=Boston,aes(x=lstat,y=medv)) +
+  geom_line(data=lm.fit5preds,aes(x=lstat,y=preds),color="Red",linewidth=2) +
+    geom_ribbon(data=ci_df5,aes(x=lstat_eval,ymin=lwr,ymax=upr,fill="CI"),alpha=0.8) +
+  geom_ribbon(data=pi_df5,aes(x=lstat_eval,ymin=lwr,ymax=upr,fill="PI"),alpha=0.3)
+
+```
+
+We can also see the dangers of using higher order polynomials to
+extrapolate:
+
+```{r}
+lstat_eval5 <- seq(from=min(Boston$lstat)-5,to=max(Boston$lstat)+5,length.out=100)
+
+lm.fit5predsb <- data.frame(lstat=lstat_eval5)
+preds_lm5b <- predict(lm.fit5,newdata=lm.fit5predsb)
+lm.fit5predsb$preds <- preds_lm5b
+
+ci_df5b <- data.frame(predict(lm.fit5, data.frame(lstat = lstat_eval5),
+    interval = "confidence"))
+pi_df5b <- data.frame(predict(lm.fit5, data.frame(lstat = lstat_eval5),
+    interval = "prediction"))
+# add lstat_eval to both ci_df and pi_df for ease of plotting
+ci_df5b$lstat_eval <- lstat_eval5
+pi_df5b$lstat_eval <- lstat_eval5
+
+ggplot() +
+  geom_point(data=Boston,aes(x=lstat,y=medv)) +
+  geom_line(data=lm.fit5predsb,aes(x=lstat,y=preds),color="Red",linewidth=2) +
+    geom_ribbon(data=ci_df5b,aes(x=lstat_eval,ymin=lwr,ymax=upr,fill="CI"),alpha=0.8) +
+  geom_ribbon(data=pi_df5b,aes(x=lstat_eval,ymin=lwr,ymax=upr,fill="PI"),alpha=0.3)
+
+```
+
+Of course, we are in no way restricted to using polynomial
+transformations of the predictors. Here we try a log transformation.
+
+```{r chunk24}
+lmfitLog <- lm(medv ~ log(lstat), data = Boston)
+summary(lmfitLog)
+```
+
+A visual of the fitted transformed model.
+
+```{r}
+lmfitLogpreds <- data.frame(lstat=seq(from=min(Boston$lstat),to=max(Boston$lstat),by=.1))
+preds_lmLog <- predict(lmfitLog,newdata=lmfitLogpreds)
+lmfitLogpreds$preds <- preds_lmLog
+
+ggplot() +
+  geom_point(data=Boston,aes(x=log(lstat),y=medv)) +
+  geom_line(data=lmfitLogpreds,aes(x=log(lstat),y=preds),color="Red",linewidth=2)
+```
+
+```{r chunk22d}
+par(mfrow = c(2, 2))
+plot(lmfitLog)
+```
+
+## Qualitative Predictors
+
+We will now examine the `Carseats` data, which is part of the `ISLR2`
+library. We will attempt to predict `Sales` (child car seat sales) in
+$400$ locations based on a number of predictors.
+
+```{r chunk25}
+head(Carseats)
+```
+
+The `Carseats` data includes qualitative predictors such as `shelveloc`,
+an indicator of the quality of the shelving location---that is, the
+space within a store in which the car seat is displayed---at each
+location. The predictor `shelveloc` takes on three possible values:
+*Bad*, *Medium*, and *Good*. Given a qualitative variable such as
+`shelveloc`, `R` generates dummy variables automatically. Below we fit a
+multiple regression model that includes some interaction terms.
+
+```{r chunk26}
+lm.fit <- lm(Sales ~ . + Income:Advertising + Price:Age, 
+    data = Carseats)
+summary(lm.fit)
+```
+
+### Principal Components Regression
+
+Principal components regression (PCR) can be performed using the `pcr()`
+function, which is part of the `pls` library. We now apply PCR to the
+`Hitters` data, in order to predict `Salary`. Again, we ensure that the
+missing values have been removed from the data, as described in Section
+6.5.1.
+
+```{r chunk42}
+library(pls)
+set.seed(2)
+pcr.fit <- pcr(medv ~ ., data = Boston, scale = TRUE,
+    validation = "CV")
+```
+
+The syntax for the `pcr()` function is similar to that for `lm()`, with
+a few additional options. Setting `scale = TRUE` has the effect of
+*standardizing* each predictor, using ( 6.6), prior to generating the
+principal components, so that the scale on which each variable is
+measured will not have an effect. Setting `validation = "CV"` causes
+`pcr()` to compute the ten-fold cross-validation error for each possible
+value of $M$, the number of principal components used. The resulting fit
+can be examined using `summary()`.
+
+```{r chunk43}
+summary(pcr.fit)
+```
+
+The CV score is provided for each possible number of components, ranging
+from $M=0$ onwards. Note that `pcr()` reports the *root mean squared
+error*; in order to obtain the usual MSE, we must square this quantity.
+For instance, a root mean squared error of $352.8$ corresponds to an MSE
+of $352.8^2=124{,}468$.
+
+One can also plot the cross-validation scores using the
+`validationplot()` function. Using `val.type = "MSEP"` will cause the
+cross-validation MSE to be plotted.
+
+```{r chunk44}
+validationplot(pcr.fit, val.type = "MSEP")
+```
+
+We see that the smallest cross-validation error occurs when $M=12$
+components are used. This is the same as the number of covariates
+originally, which amounts to simply performing least squares, because
+when all of the components are used in PCR no dimension reduction
+occurs. However, from the plot we also see that the cross-validation
+error is roughly the same when only three components are included in the
+model. This suggests that a model that uses just a small number of
+components might suffice.
+
+The `summary()` function also provides the *percentage of variance
+explained* in the predictors and in the response using different numbers
+of components. Briefly, we can think of this as the amount of
+information about the predictors or the response that is captured using
+$M$ principal components. For example, setting $M=1$ only captures
+$49.23\,\%$ of all the variance, or information, in the predictors. In
+contrast, using $M=5$ increases the value to $84.54\,\%$. If we were to
+use all $M=p=12$ components, this would increase to $100\,\%$.
+
+The plots below provide diagnostics for residuals.
+
+```{r}
+plot(predict(pcr.fit),resid(pcr.fit));abline(a=0,b=0)
+```
+
+```{r}
+qqnorm(resid(pcr.fit));qqline(resid(pcr.fit))
+```
