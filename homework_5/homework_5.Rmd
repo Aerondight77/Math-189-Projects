@@ -26,3 +26,65 @@ If these assumption are not met, a linear regression model may not be the best f
 # Aplication Questions
 
 ## Question 2
+
+```{r}
+insurance <- read.csv("homework4_insurance.csv")
+plot(insurance$bmi, insurance$charges)
+
+```
+Much data is restricted to lower values of the dependent variable charge. There does seem to exist some positive linear relationship between charges and bmi albeit with a lesser amount of the data.
+
+## Question 3
+```{r}
+smokers <- insurance$smoker[insurance$smoker=='yes']
+non_smoker <- insurance$smoker[insurance$smoker=='no']
+
+boxplot(insurance$charges ~ insurance$smoker, height = .6)
+```
+It appears that smokers do have higher medical bills. 
+
+## Question 4
+### (a)
+```{r}
+linearFitBmi_Smoker <- lm(charges~bmi+smoker, data = insurance)
+summary(linearFitBmi_Smoker)
+```
+
+### (b)
+The summary returns 23593.98 as the coefficient for smoker. If you are a smoker you will be charged $23593.98 more that non-smokers.
+
+### (c)
+The summary return $388.02 coefficient for bmi. This coefficient explains the marginal change in medical charges for each additional unit increase of bmi.  
+
+### (d)
+```{r}
+plot(predict(linearFitBmi_Smoker), residuals(linearFitBmi_Smoker))
+```
+We find the resuduals are not centered around zero and are instead clustered around various predicted values. This could mean the errors are correlated and that there may be a pattern in the data our model is not picking up. This violates the assumption of homoscdasticity and uncorrelated error. The data may also violate our linearity assumption. 
+
+### (e)
+```{r}
+par(mfrow = c(2, 2))
+plot(linearFitBmi_Smoker)
+
+```
+
+
+The Normal Q-Q plot can be interpreted by checking to see if the points follow a straight line. If the points follow a straight line, the data is likely normally distributed. If the points deviate from a straight line, the data may not be normally distributed. We see that for both low and high values of theoretical quantiles the residuals deviate from the dashed line suggesting that our residuals also violate the assumption of normality.
+ 
+## Question 5
+## (a)
+```{r}
+logLinearFitBmi_Smoker <- lm(log(charges)~bmi+smoker, data = insurance)
+summary(logLinearFitBmi_Smoker)
+```
+## (b)
+1.514765 is the marginal percent change of medical charges for smokers. You will be charged 150% more as a smoker than as a nonsmoker. 
+## (c)
+```{r}
+par(mfrow = c(2, 2))
+plot(logLinearFitBmi_Smoker)
+```
+## (d)
+The residual plots from the model in question 4 are nonlinear in both high and low theoretical quantiles suggesting the residuals do not come from a normal distribution. After taking the log of the dependent variable, to create an updated model, all of the residuals are plotted close to the dashed line. This new plot shows that the new model has normally distributed residuals
+
