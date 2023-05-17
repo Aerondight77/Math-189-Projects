@@ -1,0 +1,334 @@
+---
+title: "Linear Discriminant Analysis"
+author: |
+  | Daniel Ries, Ph.D.
+  | Department of Mathematics, UCSD
+  | [dcries@ucsd.edu](mailto:dcries@ucsd.edu)
+date: "2023-01-29"
+abstract: |
+  This document provides an introduction to linear and quadratic discriminant analysis in R. This lab has borrowed and modified with permission from material in *An Introduction to Statistical Learning* by James, Witten, Hastie, and Tibshirani. 
+output: 
+  html_document:
+    number_sections: yes
+    toc: yes
+---
+
+
+# Lab: Classification Methods
+
+```{r}
+library(ISLR2)
+library(MASS)
+library(ggplot2)
+library(dplyr)
+library(tidyr)
+```
+
+
+# Discriminant Analysis Simulation
+
+To show Linear Discriminant Analysis (LDA), we will simulate a simple problem in two dimensions so we can visualize the problem.
+
+## Generate data with a linear boundary
+
+The code below generates an equal number of observations from two classes, each having two features $x_1$ and $x_2$. The data for both classes is simulated from a multivariate Normal, with different mean vectors but the same covariance matrix.
+
+```{r}
+set.seed(23534)
+pi1 <- 0.5
+pi2 <- 0.5
+n <- 50
+mu1 <- c(0,0)
+mu2 <- c(1.5,1.5)
+Sigma <- matrix(c(1,-0.5,-0.5,1),ncol=2)
+x1 <- mvrnorm(n,mu1,Sigma)
+x2 <- mvrnorm(n,mu2,Sigma)
+dat <- data.frame(rbind(x1,x2),class=factor(rep(c(1,2),each=n)))
+
+x1te <- mvrnorm(n,mu1,Sigma)
+x2te <- mvrnorm(n,mu2,Sigma)
+tedat <- data.frame(rbind(x1te,x2te),class=factor(rep(c(1,2),each=n)))
+```
+
+### Plot training and test data
+
+The training data and test data for the two classes are plotted below. 
+
+```{r}
+fulldat <- rbind(dat,tedat)
+fulldat$split = rep(c("train","test"),each=2*n)
+ggplot() + 
+  geom_point(data=fulldat,aes(x=X1,y=X2,color=class,shape=split))
+```
+
+
+### Find decision boundary
+
+The decision boundary for LDA is solved below. The boundary is where the likelihood in being in class 1 is equal to being in class 2. Recall, in LDA the decision boundary is assumed to be linear due to common covariances. 
+
+```{r}
+mu1hat <- colMeans(x1)
+mu2hat <- colMeans(x2)
+Sigmahat <- cov(rbind(x1,x2))
+intercept <- c(log(pi1/pi2) - 0.5*t(mu1hat+mu2hat)%*%solve(Sigmahat)%*%(mu1hat-mu2hat))
+slope <- solve(Sigmahat)%*%(mu1hat-mu2hat)
+
+b0 <- intercept/(-slope[2])
+b1 <- slope[1]/(-slope[2])
+```
+
+### Plot linear decision boundary
+
+Plotting the decision boundary as well as the multivariate Normal densities for both classes. 
+
+```{r}
+grid <- expand.grid(x1 = seq(-3, 5, length.out=200), x2 = seq(-3, 5, length.out=200))
+dens1 <- cbind(grid, prob = mvtnorm::dmvnorm(grid, mean = mu1, sigma = Sigma))
+dens2 <- cbind(grid, prob = mvtnorm::dmvnorm(grid, mean = mu2, sigma = Sigma))
+dens <- data.frame(rbind(dens1,dens2),class=factor(rep(c(1,2),each=nrow(dens1))))
+
+ggplot() + 
+  geom_point(data=dat,aes(x=X1,y=X2,color=class)) + 
+  geom_contour(data=dens,aes(x=x1,y=x2,z=prob,color=class)) + 
+  geom_abline(intercept=b0,slope=b1)
+```
+
+### Check performance on test set
+
+A quick visual inspection shows LDA does a good job of discriminating the two classes on the test set. 
+
+```{r}
+ggplot() + 
+  geom_point(data=tedat,aes(x=X1,y=X2,color=class)) + 
+  geom_abline(intercept=b0,slope=b1)
+```
+
+## Generate with quadratic boundary
+
+We make the problem more complicated by allowing the covariance matrices to be different between the two classes. This results in a boundary between classes that is no longer linear. 
+
+```{r}
+set.seed(8745)
+pi1 <- 0.5
+pi2 <- 0.5
+n <- 50
+mu1 <- c(0,0)
+mu2 <- c(1.5,1.5)
+Sigma1 <- matrix(c(1,-0.5,-0.5,1),ncol=2)
+Sigma2 <- matrix(c(3,0.5,0.5,1),ncol=2)
+x1 <- mvrnorm(n,mu1,Sigma1)
+x2 <- mvrnorm(n,mu2,Sigma2)
+dat <- data.frame(rbind(x1,x2),class=factor(rep(c(1,2),each=n)))
+
+x1te <- mvrnorm(n,mu1,Sigma1)
+x2te <- mvrnorm(n,mu2,Sigma2)
+tedat <- data.frame(rbind(x1te,x2te),class=factor(rep(c(1,2),each=n)))
+```
+
+### Plot data
+
+```{r}
+fulldat <- rbind(dat,tedat)
+fulldat$split = rep(c("train","test"),each=2*n)
+ggplot() + 
+  geom_point(data=fulldat,aes(x=X1,y=X2,color=class,shape=split))
+```
+
+### Compute LDA and QDA boundaries
+
+
+
+```{r}
+mu1hat <- colMeans(x1)
+mu2hat <- colMeans(x2)
+Sigma_hat <- cov(rbind(x1,x2))
+Sigma1_hat <- cov(x1)
+Sigma2_hat <- cov(x2)
+
+intercept <- c(log(pi1/pi2) - 0.5*t(mu1hat+mu2hat)%*%solve(Sigma_hat)%*%(mu1hat-mu2hat))
+slope <- solve(Sigma_hat)%*%(mu1hat-mu2hat)
+
+b0 <- intercept/(-slope[2])
+b1 <- slope[1]/(-slope[2])
+
+grid <- expand.grid(x1 = seq(-3, 5, length.out=200), x2 = seq(-3, 5, length.out=200))
+dens1 <- cbind(grid, prob = mvtnorm::dmvnorm(grid, mean = mu1, sigma = Sigma1_hat))
+dens2 <- cbind(grid, prob = mvtnorm::dmvnorm(grid, mean = mu2, sigma = Sigma2_hat))
+dens <- data.frame(rbind(dens1,dens2),class=factor(rep(c(1,2),each=nrow(dens1))))
+```
+
+
+### Plot decision boundary
+
+This plot shows both the LDA and QDA decision boundaries. 
+
+```{r}
+# QDA 
+m1 <- lda(class ~X1+X2 , data=dat)
+m2 <- qda(class ~X1+X2 , data=dat)
+predqda=function(x,y) predict(m2, data.frame(X1=x,X2=y))$class==1
+grid$contours <- as.numeric(predqda(grid$x1,grid$x2))
+
+ggplot() + 
+  geom_point(data=dat,aes(x=X1,y=X2,color=class)) + 
+  geom_contour(data=dens,aes(x=x1,y=x2,z=prob,color=class)) + 
+  geom_contour(data=grid,aes(x=x1,y=x2,z=contours)) + 
+  geom_abline(intercept=b0,slope=b1)
+
+
+```
+
+### Look at test set
+
+```{r}
+ggplot() + 
+  geom_point(data=tedat,aes(x=X1,y=X2,color=class)) + 
+  geom_contour(data=grid,aes(x=x1,y=x2,z=contours)) + 
+  geom_abline(intercept=b0,slope=b1)
+```
+
+
+A comparison of LDA vs QDA performance on the test set. 
+
+```{r}
+table(dat$class,predict(m1,newdata=tedat)$class)
+table(dat$class,predict(m2,newdata=tedat)$class)
+```
+
+
+
+## The Stock Market Data
+
+Next, we apply LDA and QDA to 
+the `Smarket` data, which is part of the `ISLR2` library. This
+data set consists of percentage returns for the S\&P 500 stock index
+over $1,250$~days, from the beginning of 2001 until the end of
+2005. For each date, we have recorded the percentage returns for each
+of the five previous trading days, `lagone` through `lagfive`. We
+have also recorded `volume` (the number of shares traded on the previous day, in billions), `Today` (the percentage return on the date in question)  and `direction` (whether the market was `Up` or `Down` on this date). Our goal is to predict `direction` (a qualitative response) using the other features.
+
+```{r chunk1}
+names(Smarket)
+dim(Smarket)
+summary(Smarket)
+pairs(Smarket)
+```
+
+The `cor()` function produces a matrix that contains all of the pairwise correlations among the predictors in a data set. The first command below gives an error message because the `direction` variable is qualitative.
+
+```{r chunk2, error=TRUE}
+cor(Smarket)
+cor(Smarket[, -9])
+```
+
+As one would expect, the correlations between the lag variables and today's returns are close to zero. In other words, there appears to be little correlation between today's returns and previous days' returns. The only substantial correlation is between `Year` and `volume`. By plotting the data, which is ordered chronologically, we see that `volume` is increasing over time. In other words, the average number of shares traded daily increased from 2001 to 2005.
+
+```{r chunk3}
+attach(Smarket)
+plot(Volume)
+```
+
+
+```{r chunk9}
+train <- (Year < 2005)
+Smarket.2005 <- Smarket[!train, ]
+dim(Smarket.2005)
+Direction.2005 <- Direction[!train]
+```
+
+The object `train` is a vector of $1{,}250$ elements, corresponding to the observations in our data set. The elements of the vector that correspond to observations that occurred before 2005 are set to `TRUE`, whereas those that correspond to observations  in 2005 are set to `FALSE`.
+The object `train` is a  *Boolean*  vector, since its elements are `TRUE` and `FALSE`.
+Boolean vectors can be used to obtain a subset of the rows or columns of a matrix. For instance, the command `Smarket[train, ]` would pick out a submatrix of the stock market data set, corresponding only to the dates before 2005, since
+those are the ones for which the elements of `train` are `TRUE`.
+The `!` symbol can be used to reverse all of the elements of  a Boolean vector. That is, `!train` is a vector similar to `train`, except that  the elements that are `TRUE` in `train` get swapped to `FALSE` in `!train`, and the elements that are `FALSE`
+in `train` get swapped to `TRUE` in `!train`. Therefore, `Smarket[!train, ]` yields a submatrix of the stock market data containing only
+the observations for which `train` is `FALSE`---that is, the observations with dates in 2005. The output above indicates that there are 252 such observations.
+
+
+
+## Linear Discriminant Analysis
+
+Now we will perform LDA on the `Smarket` data.  We fit the model using only the observations before 2005.
+
+```{r chunk14}
+library(MASS)
+lda.fit <- lda(Direction ~ Lag1 + Lag2, data = Smarket,
+    subset = train)
+lda.fit
+plot(lda.fit)
+```
+
+The LDA output indicates that $\hat\pi_1=0.492$ and $\hat\pi_2=0.508$; in other words, $49.2$\,\% of the training observations correspond to days during which the market went down.
+ It also provides the group means; these are the average of each predictor within each class, and are used by LDA as estimates of $\mu_k$.
+ These suggest that there is a tendency for the previous 2~days' returns to be negative on days when the market increases, and a tendency for the previous days' returns to be positive on days when the market declines.
+  The *coefficients of linear discriminants* output provides the linear combination of `lagone` and `lagtwo` that are used to form the LDA decision rule. In other words, these are the multipliers of the elements of $X=x$ in ( 4.24).
+  If $-0.642\times `lagone` - 0.514 \times `lagtwo`$ is large, then the LDA classifier will predict a market increase, and if it is small, then the LDA classifier will predict a market decline.
+
+  The `plot()` function produces plots of the *linear discriminants*, obtained by computing $-0.642\times `lagone` - 0.514 \times `lagtwo`$ for each of the training observations. The `Up` and `Down` observations are displayed separately.
+
+
+
+
+The `predict()` function returns a list with three elements. The first element,  `class`,  contains LDA's predictions about the movement of the market. The second element, `posterior`, is a matrix whose $k$th column contains the posterior probability that the corresponding observation belongs to the $k$th class, computed from ( 4.15). Finally, `x` contains the linear discriminants, described earlier.
+
+```{r chunk15}
+lda.pred <- predict(lda.fit, Smarket.2005)
+names(lda.pred)
+```
+
+As we observed in Section 4.5, the LDA and logistic regression predictions are almost identical.
+
+```{r chunk16}
+lda.class <- lda.pred$class
+table(lda.class, Direction.2005)
+mean(lda.class == Direction.2005)
+```
+
+Applying a $50$\,\% threshold to the posterior probabilities allows us to recreate the predictions contained in `lda.pred$class`.
+
+```{r chunk17}
+sum(lda.pred$posterior[, 1] >= .5)
+sum(lda.pred$posterior[, 1] < .5)
+```
+
+Notice that the posterior probability output by the model corresponds to the probability that the market will *decrease*:
+
+```{r chunk18}
+lda.pred$posterior[1:20, 1]
+lda.class[1:20]
+```
+
+If we wanted to use a posterior probability threshold other than $50$\,\% in order to make predictions, then we could easily do so. For instance, suppose that we wish to predict a market decrease only if we are very certain that the market will indeed decrease on that day---say, if the posterior probability
+is at least $90$\,\%.
+
+```{r chunk19}
+sum(lda.pred$posterior[, 1] > .9)
+```
+
+No days in 2005 meet that threshold! In fact, the greatest posterior probability of decrease in all of 2005 was $52.02$\,\%.
+
+## Quadratic Discriminant Analysis
+
+We will now fit a QDA model to the `Smarket` data. QDA is  implemented in `R` using the `qda()` function, which is also part of the `MASS` library. The syntax is identical to that of `lda()`.
+
+```{r chunk20}
+qda.fit <- qda(Direction ~ Lag1 + Lag2, data = Smarket,
+    subset = train)
+qda.fit
+```
+
+The output  contains the group means. But it does not contain the coefficients of the linear discriminants, because the QDA classifier involves  a quadratic, rather than a linear, function of the predictors. The `predict()` function works in exactly the same fashion as for LDA.
+
+```{r chunk21}
+qda.class <- predict(qda.fit, Smarket.2005)$class
+table(qda.class, Direction.2005)
+mean(qda.class == Direction.2005)
+```
+
+Interestingly, the QDA predictions are accurate almost $60$\,\% of the time, even though the 2005 data was not used  to fit the model. This level of accuracy is quite impressive for stock market data, which is known to be quite hard to model accurately.
+This  suggests that the quadratic form assumed by QDA may capture the true relationship more accurately than the linear forms assumed by LDA and logistic regression.
+ However, we recommend evaluating this method's performance on a larger test set  before betting  that this approach will consistently beat the market!
+
+
+
+
