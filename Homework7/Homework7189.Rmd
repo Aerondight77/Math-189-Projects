@@ -1,0 +1,146 @@
+---
+title: "Homework 7"
+author: "Daria Barbour-Brown, Warren Kennedy, Bailey Ho"
+date: "2023-05-16"
+output: html_document
+---
+### Conceptual Problem 
+#### *1. Linear discriminant analysis and logistic regression can both be used for binary classification. How would you decide to use one method versus the other in practice?*
+
+  Linear discriminant analysis assumes certain properties of the data, such as the normality and equality of variances in each class. If these assumptions are not me, LDA my not preform the way we need it to. Logistic regression makes fewer assumptions about the data distribution, making it a more flexible method to use when LDA assumptions are not met.
+
+  Logistic regression provides direct estimates of class membership probabilities. It gives us a good interpretation of the relationship between predictor variables and a binary outcome. From a logistic regression we may attain "odds ratios" and p-values, which we use to assess the impact of individual predictors. LDA does not directly estimate these probabilities but provides functions for classifying new observations. LDA focuses more on the separation between classes rather than individual predictors.
+
+  Lastly, when our sample size is large compared to the number of predictors, LDA performs well. In this case. LDA will more reliably estimate these parameters. On the other hand, logistic regression is better suited for smaller sample sizes with flexibility to deal with higher numbers of predictors. If you are dealing with high-dimensional data with more predictors than observations, logistic regression is considered to be more appropriate.
+  
+### Application Problems
+#### *2. Fitting a logistic regression model with continuous covariate and categorical covariate.*
+#### *(a) Fit a logistic regression with diabetes (Y/N) as the response, and glucose levels as a covariate, as well as an indicator for an individual having a BMI greater than 35 (BMI is given by mass in this dataset). Print the summary of this regression object.*
+
+  
+```{r}
+library(mlbench)
+library(ggplot2)
+library(dplyr)
+data("PimaIndiansDiabetes") #loads data under "name"
+pimaData <- PimaIndiansDiabetes
+#create new numeric col of all 1s
+pimaData$response <- 1
+#crate response col, transform string to categorical 
+pimaData$response[pimaData$diabetes == 'neg'] <- 0
+#bmi > 35 col
+pimaData$bmi <- 0
+pimaData$bmi[pimaData$mass > 35] <- 1
+
+logRegMulti <- glm(response~glucose + bmi, data=pimaData, family="binomial")
+summary(logRegMulti)
+
+```
+
+#### *(b) Plot glucose levels versus diabetes (Y/N). Add the predicted probability of having diabetes as a function of glucose, for (i) individuals with BMI <35, and (ii) for individuals with BMI >35.*
+
+```{r}
+#Glucose for Low BMI
+#       vector of 1s for intercept    vector of random glucose levels btw max and min        all bmi's > 35
+BMILow <- cbind(rep(1,10000), seq(from=min(pimaData$glucose),to=max(pimaData$glucose),length.out=1000), rep(0, 10000))
+lowPredxb <- BMILow%*%coef(logRegMulti)
+lowPreds <-  1/(1+exp(-lowPredxb))
+lowPredDF <- data.frame(x=BMILow[,2], preds=lowPreds)
+
+#Glucose for High BMI
+BMIHigh <- cbind(rep(1,10000), seq(from=min(pimaData$glucose),to=max(pimaData$glucose),length.out=1000), rep(1, 10000))
+highPredxb <- BMIHigh%*%coef(logRegMulti)
+highPreds <-  1/(1+exp(-highPredxb))
+highPredDF <- data.frame(x=BMIHigh[,2], preds=highPreds)
+
+ggplot() + 
+  geom_point(data=pimaData,aes(y=response, x=glucose)) + 
+  geom_line(data=lowPredDF,aes(x=x,y=lowPreds),color="Blue") +
+  geom_line(data=highPredDF,aes(x=x,y=highPreds),color="Red") +
+  labs(y="Probability of having Diabetes", x="Glucose") 
+```
+
+#### *(c) Add 95% confidence intervals for the predicted probability of having diabetes to your plots for both predictions in (b).*
+```{r}
+#CI Low BMI
+lowSexb <- sqrt(diag(BMILow%*%vcov(logRegMulti)%*%t(BMILow)))
+lowCixb <- cbind(lowPredxb-1.96*lowSexb,lowPredxb+1.96*lowSexb)
+ciLow <- 1/(1+exp(-lowCixb))
+lowPredDF <- lowPredDF %>% mutate(lb=ciLow[,1],ub=ciLow[,2])
+
+#CI High BMI
+highSexb <- sqrt(diag(BMIHigh%*%vcov(logRegMulti)%*%t(BMIHigh)))
+highCixb <- cbind(highPredxb-1.96*highSexb,highPredxb+1.96*highSexb)
+ciHigh <- 1/(1+exp(-highCixb))
+highPredDF <- highPredDF %>% mutate(lb=ciHigh[,1],ub=ciHigh[,2])
+
+ggplot() + 
+  geom_point(data=pimaData,aes(y=response, x=glucose)) + 
+  geom_line(data=lowPredDF,aes(x=x,y=lowPreds, color="BMI < 35")) +
+  geom_ribbon(data=lowPredDF,aes(x=x,ymin=lb,ymax=ub),alpha=0.3,fill="Red") +
+  geom_line(data=highPredDF,aes(x=x,y=highPreds, color="BMI > 35")) +
+  geom_ribbon(data=highPredDF,aes(x=x,ymin=lb,ymax=ub),alpha=0.3,fill="Blue") +
+  labs(y="Probability of having Diabetes", x="Glucose")
+```
+
+
+#### *3. LDA*
+#### *(a) Split the data into training/testing sets, with 80% training. Fit a LDA model with diabetes (Y/N) as the response and glucose and BMI as covariates (use the actual BMI values this time.)*
+
+```{r}
+library(MASS)
+
+set.seed(1)
+train = sample(768, 768*.8)
+train_set <- pimaData[train, ]
+test_set <- pimaData[-train, ]
+
+lda_fit <- lda(response ~ glucose + mass, data = pimaData,
+    subset = train)
+lda_fit
+```
+
+#### *(b) Plot glucose versus BMI and color the points by their true diabetes class (Y/N) for the test set.*
+
+```{r}
+ggplot(test_set, aes(x=glucose,y=mass)) + geom_point(aes(color = diabetes))
+```
+
+
+#### *(c) Add the LDA decision boundary for the model fit in (a).*
+```{r}
+x1 <- cbind(test_set$glucose, test_sete$mass) 
+x2 <- test_set$mass
+
+
+mu1hat <- colMeans(x1)
+mu2hat <- colMeans(x2)
+Sigmahat <- cov(rbind(x1,x2))
+intercept <- c(log(pi1/pi2) - 0.5*t(mu1hat+mu2hat)%*%solve(Sigmahat)%*%(mu1hat-mu2hat))
+slope <- solve(Sigmahat)%*%(mu1hat-mu2hat)
+
+b0 <- intercept/(-slope[2])
+b1 <- slope[1]/(-slope[2])
+
+```
+
+#### *(d) Print the 2x2 confusion matrix of the predictions on the test set versus their true values. Comment on the performance of LDA for predicting diabetes using glucose and BMI.*
+
+
+#### *4. QDA*
+#### *(a) Using the same train/test split as in 2a, fit a QDA with the same variables.*
+```{r}
+qda_fit <- qda(response ~ glucose + mass, data = pimaData,
+    subset = train)
+qda_fit
+```
+
+
+#### *(b) Print the 2x2 confusion matrix of the predictions on the test set versus their true values.*
+
+#### *(c) Compare the predictions of LDA versus QDA. Which model would you recommend in this case?*
+
+
+
+
+
