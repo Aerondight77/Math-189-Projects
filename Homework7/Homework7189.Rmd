@@ -109,9 +109,23 @@ ggplot(test_set, aes(x=glucose,y=mass)) + geom_point(aes(color = diabetes))
 
 #### *(c) Add the LDA decision boundary for the model fit in (a).*
 ```{r}
-x1 <- cbind(test_set$glucose, test_sete$mass) 
-x2 <- test_set$mass
+Diabetic <- test_set$response == 1
+NonDiabetic <- test_set$response == 0
 
+Diabetic.df <- test_set[Diabetic, ]
+NonDiabetic.df <- test_set[NonDiabetic, ]
+
+diabetic.gluc.mean <- mean(Diabetic.df$glucose)
+diabetic.mass.mean <- mean(Diabetic.df$mass)
+
+nondiabetic.gluc.mean <- mean(NonDiabetic.df$glucose)
+nondiabetic.mass.mean <- mean(NonDiabetic.df$mass)
+
+x1 <- cbind(diabetic.gluc.mean,diabetic.mass.mean) 
+x2 <- cbind(nondiabetic.gluc.mean,nondiabetic.mass.mean) 
+
+pi1 = 0.6465798
+pi2 = 0.3534202 
 
 mu1hat <- colMeans(x1)
 mu2hat <- colMeans(x2)
@@ -125,6 +139,10 @@ b1 <- slope[1]/(-slope[2])
 ```
 
 #### *(d) Print the 2x2 confusion matrix of the predictions on the test set versus their true values. Comment on the performance of LDA for predicting diabetes using glucose and BMI.*
+```{r}
+temp_table <- table(Wage$hi,round(predict(logReg,type='response')))
+temp_table
+```
 
 
 #### *4. QDA*
@@ -137,6 +155,10 @@ qda_fit
 
 
 #### *(b) Print the 2x2 confusion matrix of the predictions on the test set versus their true values.*
+```{r}
+temp_table <- table(Wage$hi,round(predict(logReg,type='response')))
+temp_table
+```
 
 #### *(c) Compare the predictions of LDA versus QDA. Which model would you recommend in this case?*
 
