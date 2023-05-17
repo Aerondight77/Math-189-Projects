@@ -1,0 +1,132 @@
+---
+title: "Homework_6"
+author: "Daria Barbour-Brown | Bailey Ho | Warren Kennedy"
+date: "2023-05-10"
+output:
+  pdf_document: default
+  html_document: default
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+# Conceptuual Problem
+
+## Question 1
+
+*When would you want to use ridge regression instead of a standard linear regression?*
+
+We should explore alternative methods to enhance both the accuracy and interpretability of our model predictions. One such method is ridge regression, which is a refined version of linear regression specifically designed for scenarios where the predictor variables exhibit high correlation. In situations where multicollinearity exists, traditional linear regression often yields unstable and unreliable coefficient estimates. By incorporating regularization, ridge regression effectively addresses this challenge by shrinking the coefficient estimates, reducing their variance, and stabilizing the model.
+
+## Question 2
+
+*When would you not want to use ridge regression?*
+
+Ridge regression uses regularization to shrink the coefficient estimates towards zero, although they never actually reach zero. This regularization can compromise interpretability, particularly if the aim is to interpret the significance of individual coefficients in your analysis. In such instances, alternative approaches like lasso regression may be more suitable. Lasso regression selectively identifies the most influential variables, simplifying the model and facilitating interpretation by emphasizing the most important predictors.
+
+# Application Question
+
+## Question 3
+
+### Part A 
+```{r}
+library(ISLR2)
+data <- Hitters
+data <- subset(data, select = -c(League,Division,NewLeague))
+data <- data[complete.cases(data), ]
+dim(data)
+```
+
+### Part B
+
+When a variable's coefficient is reduced to zero by LASSO regression, it signifies that the variable does not possess any substantial influence on the model's prediction or that its impact is negligible when compared to other variables.
+
+```{r}
+set.seed(1)
+train <- sample(263, 263*.8)
+```
+
+### Part C
+
+```{r}
+lm.fit <- lm(Salary ~. , data = data, subset = train)
+summary(lm.fit)
+```
+
+### Part D
+```{r}
+RMSE = sqrt(mean((data$Salary[-train] - predict(lm.fit, data[-train,]))^2))
+RMSE
+```
+
+### Part E
+
+We anticipate that the Residual Standard Error (RSE) will be smaller, mainly because the Root Mean Squared Error (RMSE) is calculated by dividing the RSS by a larger number. Additionally, it is important to note that the RSS in Part C is derived from our training data, while the RSS in Part D pertains to the testing data.
+In general, we typically observe that the training RSS tends to be lower than the testing RSS. This occurrence is due to the fact that our model is specifically trained on the training data, which it  analyzes during the training process. By doing so, it attempts to find the underlying patterns and relationships within that data. However, when the model encounters testing data with different patterns or relationships, it may struggle to capture the relationships that are unfamiliar to our model. Consequently, this disparity in data distribution can result in a comparatively higher testing RSS when contrasted with the training RSS.
+
+## Question 4
+
+### Part A
+```{r}
+library(glmnet)
+x <- model.matrix(Salary ~ ., data)[, -1]
+y <- data$Salary
+
+set.seed(1)
+lasso.fit <- cv.glmnet(x[train, ], y[train], alpha = 1)
+lasso.fit
+plot(lasso.fit)
+bestlam.lss <- lasso.fit$lambda.min
+bestlam.lss
+```
+
+### Part B
+```{r}
+coef(lasso.fit)
+```
+
+### Part C
+```{r}
+set.seed(1)
+test <- (-train)
+y.test <- y[test]
+
+lasso.pred <- predict(lasso.fit, s = bestlam.lss, newx = x[test, ])
+mean((lasso.pred - y.test)^2)
+```
+
+## Question 5
+
+### Part A
+```{r}
+ridge.fit <- cv.glmnet(x[train, ], y[train], alpha = 0)
+ridge.fit
+plot(ridge.fit)
+bestlam.rr <- ridge.fit$lambda.min
+bestlam.rr
+```
+
+### Part B
+
+The intercept in ridge regression exhibits a greater magnitude compared to our linear estimates. Additionally, the coefficient estimates in ridge regression are, in many cases, closer to zero when compared to the estimates in our linear model.
+
+```{r}
+coef(ridge.fit)
+
+coef(lm.fit)
+```
+
+
+### Part C
+```{r}
+ridge.pred <- predict(ridge.fit, s = bestlam.rr, newx = x[test, ])
+ridge.pred
+mean((ridge.pred - y.test)^2)
+```
+
+## Question 6
+
+*Which model would you recommend using if the General Manager of a baseball team is interested knowing which variables are most important for predicting a players salary?*
+
+In this scenario, our preference would be to utilize the LASSO estimates when reporting back to the General Manager. Although both LASSO and ridge regression can be employed for predictive modeling, LASSO's advantage lies in its ability to exclude less significant predictors, whereas ridge regression retains all predictors, thereby reducing model interpretability. Given the General Manager's primary interest in the most important variables, we opt for LASSO as it enables subset selection, emphasizing the variables of greatest relevance.

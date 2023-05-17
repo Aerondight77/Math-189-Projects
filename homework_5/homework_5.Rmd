@@ -1,47 +1,45 @@
 ---
-title: "homework_5"
-author: "Daria Barbour-Brown"
+title: "Homework_5"
+author: "Bailey Ho | Daria Barbour-Brown | Warren Kennedy"
 date: "2023-05-03"
-output: html_document
+output:
+  pdf_document: default
+  html_document: default
 ---
 
 # Conceptual Problem
 
 ## Question 1
 
-Why do we need to check modeling assumptions for linear regression?
+*Why do we need to check modeling assumptions for linear regression?*
 
--   The first assumption we make before performing linear regression is that our data is generally linear. If the data does not seem to be linear, it does not make sense to fit it to a linear model. This is the most basic assumption necessary.
+We need to check the modeling assumptions of linear regression in order to ensure the validity of statistical inference, identify potential issues with the data, and guide model selection and improvement. The key model assumptions for linear regression are linearity, homoscedasticity, uncorrelated errors, no significant outlines, and normally distributed errors. If the data is not linear, it does not make sense to use linear regression to describe relationships in the data. If the errors correlated, heteroskedastic, or do not come from a normal distribution, then our estimates may be biased and inefficient, leading to inaccurate conclusions about the relationships between the predictor and the response. Finally, if our data contains significant outliers, then the linear estimation will likely be subject to inaccurate influence due to the inflexibility of plotting a linear relationship that fits all of the data.
 
--   The second important assumption we make is constant variance for each epsilon, error term. Homoscedasticity is required because it maintains consistency across all data points allowing for better regression modeling.
-
--   Next we assume that each residual is uncorrelated with each other. Correlated residuals imply that there is a pattern in a data that the model is not capturing.
-
--   High leverage outliers, (data points occurring outside the general range of the rest of the data) can change the regression estimates.
-
--Finally we assume that the error terms are normally distributed which is important for making valid inference, confidence intervals and prediction intervals.
-
-If these assumption are not met, a linear regression model may not be the best fit for our data.
+Furthermore, if the assumptions are met, a linear regression model will be the best linear unbiased estimate for our data which allows the data analyst to make strong statistical inferences.
 
 # Aplication Questions
 
 ## Question 2
+
+Much of the data seems to be restricted to lower values of the dependent variable. Despite this, there also seems to be a positive linear relationship between charges and bmi albeit with a smaller subset of the data.
 
 ```{r}
 insurance <- read.csv("homework4_insurance.csv")
 plot(insurance$bmi, insurance$charges)
 
 ```
-Much data is restricted to lower values of the dependent variable charge. There does seem to exist some positive linear relationship between charges and bmi albeit with a lesser amount of the data.
 
 ## Question 3
+
+The median value for insurance charges to non-smokers is significantly below the median charges for smokers. With this we conclude that smokers have higher medical bills than non-smokers. 
+
 ```{r}
 smokers <- insurance$smoker[insurance$smoker=='yes']
 non_smoker <- insurance$smoker[insurance$smoker=='no']
 
 boxplot(insurance$charges ~ insurance$smoker, height = .6)
 ```
-It appears that smokers do have higher medical bills. 
+
 
 ## Question 4
 ### (a)
@@ -54,23 +52,27 @@ summary(linearFitBmi_Smoker)
 The summary returns 23593.98 as the coefficient for smoker. If you are a smoker you will be charged $23593.98 more that non-smokers.
 
 ### (c)
-The summary return $388.02 coefficient for bmi. This coefficient explains the marginal change in medical charges for each additional unit increase of bmi.  
+The summary returns a $388.02 coefficient for bmi. This coefficient explains the marginal change in medical charges for each unit increase/decrease of bmi.  
 
 ### (d)
+
+We observe that the residuals are not centered around zero and are instead clustered around various predicted values. This could mean the errors are correlated and that there may be a pattern in the data that our model is not picking up. This may violate the assumption of homoscdasticity, normally distributed errors, and/or uncorrelated errors. The data may also possibly violate our linearity assumption. 
+
 ```{r}
 plot(predict(linearFitBmi_Smoker), residuals(linearFitBmi_Smoker))
 ```
-We find the resuduals are not centered around zero and are instead clustered around various predicted values. This could mean the errors are correlated and that there may be a pattern in the data our model is not picking up. This violates the assumption of homoscdasticity and uncorrelated error. The data may also violate our linearity assumption. 
+
 
 ### (e)
+
+The Normal Q-Q plot is a visual plot ofresidual normal distribution. If the points fall along the dasched line within the plot, the the residuals are approximately normally distributed. If the points deviate from a straight line, the data may not be normally distributed. We see that, for both low and high values of theoretical quantiles, the residuals deviate from the dashed line suggesting that our residuals also violate the assumption of normality.
+
 ```{r}
 par(mfrow = c(2, 2))
 plot(linearFitBmi_Smoker)
 
 ```
 
-
-The Normal Q-Q plot can be interpreted by checking to see if the points follow a straight line. If the points follow a straight line, the data is likely normally distributed. If the points deviate from a straight line, the data may not be normally distributed. We see that for both low and high values of theoretical quantiles the residuals deviate from the dashed line suggesting that our residuals also violate the assumption of normality.
  
 ## Question 5
 ## (a)
@@ -79,12 +81,33 @@ logLinearFitBmi_Smoker <- lm(log(charges)~bmi+smoker, data = insurance)
 summary(logLinearFitBmi_Smoker)
 ```
 ## (b)
-1.514765 is the marginal percent change of medical charges for smokers. You will be charged 150% more as a smoker than as a nonsmoker. 
+1.514765 is the marginal percent change of medical charges for smokers. This means you will be charged 150% more as a smoker than as a nonsmoker. 
 ## (c)
+In this case, the assumption of normality holds.
 ```{r}
 par(mfrow = c(2, 2))
 plot(logLinearFitBmi_Smoker)
 ```
-## (d)
-The residual plots from the model in question 4 are nonlinear in both high and low theoretical quantiles suggesting the residuals do not come from a normal distribution. After taking the log of the dependent variable, to create an updated model, all of the residuals are plotted close to the dashed line. This new plot shows that the new model has normally distributed residuals
 
+
+## (d)
+The residual plots from the model in question 4 are nonlinear in both high and low theoretical quantiles suggesting the residuals do not come from a normal distribution. After taking the log of the dependent variable, our updated model shows that all of the residuals are now plotted close to the dashed line. This updated plot suggests that the our data has normally distributed residuals. 
+
+# Question 6
+
+## (a)
+Suppose we want to test whether or not BMI has a significant  effect predicted medical charges. Our **null hypothesis** would be that BMI has no effect on predicted medical charges. Our **alternative hypothesis** would be that BMI has a statistically significant effect on predicted medical charges. Our **dependent** variable would be medical charges. The **independent variable** would be BMI.
+
+## (b)
+Testing our hypothesis at the 95 percent significance level, we conclude that BMI has a statistically significant effect on medical charges due to the p-value being lower that our alpha. 
+```{r}
+Htest1= lm(charges~bmi,data=insurance)
+summary(Htest1)
+```
+
+
+## (c)
+```{r}
+Htest1CI <- confint(Htest1,level=0.95)
+Htest1CI
+```
