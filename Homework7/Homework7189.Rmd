@@ -143,8 +143,11 @@ b1 <- slope[1]/(-slope[2])
 lda_pred <- predict(lda_fit, newdata = test_set)
 temp_table <- table(lda_pred$class, test_set$response)
 temp_table
-```
 
+#Calculating accuracy
+mean(lda_pred$class == test_set$response)
+```
+The LDA's predictions are accurate almost 80% of the time. 
 
 #### *4. QDA*
 #### *(a) Using the same train/test split as in 2a, fit a QDA with the same variables.*
@@ -169,7 +172,17 @@ temp_table2
 
 #### *(c) Compare the predictions of LDA versus QDA. Which model would you recommend in this case?*
 
+```{r}
+mean(qda_pred$class == test_set$response)
+```
 
+Alternatively:
+
+If we calculate accuracy for QDA: (TP + TN) / (TP + TN + FP + FN) = (28 + 94) / (28 + 94 + 23 + 9) =  0.7922078
+
+If we calculate accuracy for LDA: (TP + TN) / (TP + TN + FP + FN) = (29 + 93) / (29 + 93 + 22 + 10) = 0.7922078
+
+We conclude that both LDA and QDA can make correct predictions about diabetes (using BMI and glucose levels) about 80% of the time. 
 
 
 
