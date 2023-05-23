@@ -1,21 +1,33 @@
 ---
 title: "Homework 7"
-author: "Daria Barbour-Brown, Warren Kennedy, Bailey Ho"
+author: "Daria Barbour-Brown | Bailey Ho | Warren Kennedy"
 date: "2023-05-16"
-output: html_document
+output:
+  pdf_document: default
+  html_document: default
 ---
-### Conceptual Problem 
-#### *1. Linear discriminant analysis and logistic regression can both be used for binary classification. How would you decide to use one method versus the other in practice?*
 
-  Linear discriminant analysis assumes certain properties of the data, such as the normality and equality of variances in each class. If these assumptions are not me, LDA my not preform the way we need it to. Logistic regression makes fewer assumptions about the data distribution, making it a more flexible method to use when LDA assumptions are not met.
+# Conceptual Problem 
 
-  Logistic regression provides direct estimates of class membership probabilities. It gives us a good interpretation of the relationship between predictor variables and a binary outcome. From a logistic regression we may attain "odds ratios" and p-values, which we use to assess the impact of individual predictors. LDA does not directly estimate these probabilities but provides functions for classifying new observations. LDA focuses more on the separation between classes rather than individual predictors.
+## Question 1
 
-  Lastly, when our sample size is large compared to the number of predictors, LDA performs well. In this case. LDA will more reliably estimate these parameters. On the other hand, logistic regression is better suited for smaller sample sizes with flexibility to deal with higher numbers of predictors. If you are dealing with high-dimensional data with more predictors than observations, logistic regression is considered to be more appropriate.
-  
-### Application Problems
-#### *2. Fitting a logistic regression model with continuous covariate and categorical covariate.*
-#### *(a) Fit a logistic regression with diabetes (Y/N) as the response, and glucose levels as a covariate, as well as an indicator for an individual having a BMI greater than 35 (BMI is given by mass in this dataset). Print the summary of this regression object.*
+*Linear discriminant analysis and logistic regression can both be used for binary classification. How would you decide to use one method versus the other in practice?*
+
+LDA assumes the data follows a multivariate normal distribution and equal class variances. If these assumptions are not met, LDA may not give accurate results. In contrast, logistic regression makes fewer assumptions about the data distribution, offering more flexibility when LDA assumptions are violated.
+
+Logistic regression directly estimates class membership probabilities, allowing for the interpretation of predictor-outcome relationships. It provides odds ratios and p-values to assess the impact of individual predictors. On the other hand, LDA does not directly estimate these probabilities but focuses on class separation and provides functions for classifying new observations.
+
+The choice between the methods also depends on the sample size. LDA performs well with large sample sizes relative to the number of predictors, as it more reliably estimates parameters. Conversely, logistic regression is better suited for smaller sample sizes and can handle a higher number of predictors. If you're dealing with high-dimensional data, where the number of predictors exceeds the number of observations, logistic regression is considered more appropriate.
+
+To summarize, logistic regression is advantageous when LDA assumptions are violated, providing direct estimates of class probabilities and interpretability of predictor effects. LDA excels with large sample sizes relative to predictors, focusing on class separation rather than individual predictors. Consider the characteristics of your data and the specific analysis goals to guide your choice between LDA and logistic regression.
+
+# Application Problems
+
+## Question 2
+
+### Part A
+
+*Fit a logistic regression with diabetes (Y/N) as the response, and glucose levels as a covariate, as well as an indicator for an individual having a BMI greater than 35 (BMI is given by mass in this dataset). Print the summary of this regression object.*
 
   
 ```{r}
@@ -37,7 +49,9 @@ summary(logRegMulti)
 
 ```
 
-#### *(b) Plot glucose levels versus diabetes (Y/N). Add the predicted probability of having diabetes as a function of glucose, for (i) individuals with BMI <35, and (ii) for individuals with BMI >35.*
+### Part B
+
+*Plot glucose levels versus diabetes (Y/N). Add the predicted probability of having diabetes as a function of glucose, for (i) individuals with BMI <35, and (ii) for individuals with BMI >35.*
 
 ```{r}
 #Glucose for Low BMI
@@ -60,7 +74,10 @@ ggplot() +
   labs(y="Probability of having Diabetes", x="Glucose") 
 ```
 
-#### *(c) Add 95% confidence intervals for the predicted probability of having diabetes to your plots for both predictions in (b).*
+### Part C
+
+*Add 95% confidence intervals for the predicted probability of having diabetes to your plots for both predictions in (b).*
+
 ```{r}
 #CI Low BMI
 lowSexb <- sqrt(diag(BMILow%*%vcov(logRegMulti)%*%t(BMILow)))
@@ -84,13 +101,16 @@ ggplot() +
 ```
 
 
-#### *3. LDA*
-#### *(a) Split the data into training/testing sets, with 80% training. Fit a LDA model with diabetes (Y/N) as the response and glucose and BMI as covariates (use the actual BMI values this time.)*
+## Question 3: LDA
+
+### Part A
+
+*Split the data into training/testing sets, with 80% training. Fit a LDA model with diabetes (Y/N) as the response and glucose and BMI as covariates (use the actual BMI values this time.)*
 
 ```{r}
 library(MASS)
 
-set.seed(1)
+set.seed(3)
 train = sample(768, 768*.8)
 train_set <- pimaData[train, ]
 test_set <- pimaData[-train, ]
@@ -100,14 +120,18 @@ lda_fit <- lda(response ~ glucose + mass, data = pimaData,
 lda_fit
 ```
 
-#### *(b) Plot glucose versus BMI and color the points by their true diabetes class (Y/N) for the test set.*
+### Part B
+
+*Plot glucose versus BMI and color the points by their true diabetes class (Y/N) for the test set.*
 
 ```{r}
 ggplot(test_set, aes(x=glucose,y=mass)) + geom_point(aes(color = diabetes))
 ```
 
 
-#### *(c) Add the LDA decision boundary for the model fit in (a).*
+### Part C
+
+*Add the LDA decision boundary for the model fit in (a).*
 ```{r}
 Diabetic <- test_set$response == 1
 NonDiabetic <- test_set$response == 0
@@ -130,15 +154,22 @@ pi2 = 0.3534202
 mu1hat <- colMeans(x1)
 mu2hat <- colMeans(x2)
 Sigmahat <- cov(rbind(x1,x2))
-intercept <- c(log(pi1/pi2) - 0.5*t(mu1hat+mu2hat)%*%solve(Sigmahat, tol = 1e-18)%*%(mu1hat-mu2hat))
+intercept <- c(log(pi1/pi2) - 0.5*t(mu1hat+mu2hat)%*%solve(Sigmahat, tol = 1e-19)%*%(mu1hat-mu2hat))
 slope <- solve(Sigmahat, tol = 1e-18)%*%(mu1hat-mu2hat)
 
 b0 <- intercept/(-slope[2])
 b1 <- slope[1]/(-slope[2])
 
+#Plotting
+ggplot(test_set, aes(x=glucose,y=mass)) + geom_point(aes(color = diabetes)) +
+  geom_abline(intercept=b0,slope=b1)
+
+
 ```
 
-#### *(d) Print the 2x2 confusion matrix of the predictions on the test set versus their true values. Comment on the performance of LDA for predicting diabetes using glucose and BMI.*
+### Part D
+
+*Print the 2x2 confusion matrix of the predictions on the test set versus their true values. Comment on the performance of LDA for predicting diabetes using glucose and BMI.*
 ```{r}
 lda_pred <- predict(lda_fit, newdata = test_set)
 temp_table <- table(lda_pred$class, test_set$response)
@@ -149,8 +180,11 @@ mean(lda_pred$class == test_set$response)
 ```
 The LDA's predictions are accurate almost 80% of the time. 
 
-#### *4. QDA*
-#### *(a) Using the same train/test split as in 2a, fit a QDA with the same variables.*
+## Question 4: QDA
+
+### Part A
+
+*Using the same train/test split as in 2a, fit a QDA with the same variables.*
 ```{r}
 qda_fit <- qda(response ~ glucose + mass, data = pimaData,
     subset = train)
@@ -158,7 +192,9 @@ qda_fit
 ```
 
 
-#### *(b) Print the 2x2 confusion matrix of the predictions on the test set versus their true values.*
+### Part B
+
+*Print the 2x2 confusion matrix of the predictions on the test set versus their true values.*
 ```{r}
 # OLD CODE
 #temp_table <- table(Wage$hi,round(predict(logReg,type='response')))
@@ -170,19 +206,15 @@ temp_table2 <- table(qda_pred$class, test_set$response)
 temp_table2
 ```
 
-#### *(c) Compare the predictions of LDA versus QDA. Which model would you recommend in this case?*
+### Part C
+
+*Compare the predictions of LDA versus QDA. Which model would you recommend in this case?*
 
 ```{r}
 mean(qda_pred$class == test_set$response)
 ```
-
-Alternatively:
-
 If we calculate accuracy for QDA: (TP + TN) / (TP + TN + FP + FN) = (28 + 94) / (28 + 94 + 23 + 9) =  0.7922078
 
 If we calculate accuracy for LDA: (TP + TN) / (TP + TN + FP + FN) = (29 + 93) / (29 + 93 + 22 + 10) = 0.7922078
 
-We conclude that both LDA and QDA can make correct predictions about diabetes (using BMI and glucose levels) about 80% of the time. 
-
-
-
+Both the LDA and QDA models show similar accuracy in predicting diabetes using BMI and glucose levels. We suggest choosing the LDA model because it is simpler and easier to understand. It has a straightforward structure and allows for better interpretation of its principles. The LDA model's simplicity makes it more practical and user-friendly, particularly when making predictions or explaining results. By opting for the LDA model, you can benefit from its strong predictive performance while enjoying the advantages of a simpler and more interpretable model.
