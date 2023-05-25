@@ -6,8 +6,9 @@ output: html_document
 ---
 
 ### Conceptual Problem 
-#### *Explain, in your own words, how a random forest makes predictions.*
+#### *1. Explain, in your own words, how a random forest makes predictions.*
 
+A random forest uses trees as building blocks to construct more powerful prediction models. This method is an adaptation of Bagging, i.e bootstrap aggregation, where we generate multiple bootstrapped training datasets, train a model on each set, and average all the predictions to obtain our bagging estimator. Random forests provide an improvement over bagged trees by randomizing the sample of predictors that can be used for splitting trees at each split of every bagged tree. This adaption decorrelates the bagged trees from each other increasing the variation accounted for by each tree, thereby making the average of the resulting trees less variable and more reliable. Our final random forest bagging estimator will be used for prediction. 
 
 ### Application Problems
 #### *2. Using a linear model, predict bikers with the other variables in Bikeshare (excluding casual and registered). Make sure to use the variables in their appropriate form (i.e. numeric or factors as relevant to the context of the problem.) Perform variable selection as needed to get a strong predictive model. Use training/test splits of your choice and report a RMSE that describes your model’s performance.*
@@ -17,13 +18,13 @@ library(ISLR2)
 library(MASS)
 data <- Bikeshare
 set.seed(1)
-train <- sample(nrow(data), 0.7 * nrow(data))
+train <- sample(nrow(data), 0.8 * nrow(data))
 train_set <- data[train, ]
 test_set <- data[-train, ]
 bikes <- lm(bikers ~ . - casual - registered, data = train_set)
 model <- stepAIC(bikes, direction = "both")
-test_predict <- predict(model, newdata = test_set)
-rmse <- sqrt(mean((test_set$bikers - test_predict)^2))
+predict_test <- predict(model, newdata = test_set)
+rmse <- sqrt(mean((test_set$bikers - predict_test)^2))
 rmse
 ```
 
@@ -35,12 +36,12 @@ rmse
 ```{r}
 library(randomForest)
 set.seed(1)
-train <- sample(nrow(data), 0.7 * nrow(data))
+train <- sample(nrow(data), 0.8 * nrow(data))
 train_set <- data[train, ]
 test_set <- data[-train, ]
-bikes <- randomForest(bikers ~ . - casual - registered, data = data, subset = train_set, mtry = 6, importance = TRUE)
-model <- stepAIC(bikes, direction = "both")
-test_predict <- predict(model, newdata = test_set)
+bikes <- randomForest(bikers ~ . - casual - registered, data = train_set, mtry = 6, importance = TRUE)
+
+test_predict <- predict(bikes, newdata = test_set)
 rmse <- sqrt(mean((test_set$bikers - test_predict)^2))
 rmse
 ```
