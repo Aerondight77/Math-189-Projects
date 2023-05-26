@@ -51,3 +51,10 @@ rmse
 
 
 #### *6. Plot variable importances of your final random forest. Compare these with the linear regression output. Does the random forest find the same variables to be important as the linear regression?*
+```{r}
+importance(bikesRF)
+```
+```{r}
+varImpPlot(bikesRF)
+```
+Both linear regression and random variables find the "hr" variable to be important, but the second most important are not the same.
