@@ -110,7 +110,7 @@ ggplot() +
 ```{r}
 library(MASS)
 
-set.seed(3)
+set.seed(4)
 train = sample(768, 768*.8)
 train_set <- pimaData[train, ]
 test_set <- pimaData[-train, ]
@@ -133,20 +133,14 @@ ggplot(test_set, aes(x=glucose,y=mass)) + geom_point(aes(color = diabetes))
 
 *Add the LDA decision boundary for the model fit in (a).*
 ```{r}
-Diabetic <- test_set$response == 1
-NonDiabetic <- test_set$response == 0
+Diabetic <- train_set$response == 1
+NonDiabetic <- train_set$response == 0
 
-Diabetic.df <- test_set[Diabetic, ]
-NonDiabetic.df <- test_set[NonDiabetic, ]
+Diabetic.df <- train_set[Diabetic, ]
+NonDiabetic.df <- train_set[NonDiabetic, ]
 
-diabetic.gluc.mean <- mean(Diabetic.df$glucose)
-diabetic.mass.mean <- mean(Diabetic.df$mass)
-
-nondiabetic.gluc.mean <- mean(NonDiabetic.df$glucose)
-nondiabetic.mass.mean <- mean(NonDiabetic.df$mass)
-
-x1 <- cbind(diabetic.gluc.mean,diabetic.mass.mean) 
-x2 <- cbind(nondiabetic.gluc.mean,nondiabetic.mass.mean) 
+x1 <- as.matrix(Diabetic.df[,c("glucose","mass")])
+x2 <- as.matrix(NonDiabetic.df[,c("glucose","mass")])
 
 pi1 = 0.6465798
 pi2 = 0.3534202 
@@ -154,8 +148,8 @@ pi2 = 0.3534202
 mu1hat <- colMeans(x1)
 mu2hat <- colMeans(x2)
 Sigmahat <- cov(rbind(x1,x2))
-intercept <- c(log(pi1/pi2) - 0.5*t(mu1hat+mu2hat)%*%solve(Sigmahat, tol = 1e-19)%*%(mu1hat-mu2hat))
-slope <- solve(Sigmahat, tol = 1e-18)%*%(mu1hat-mu2hat)
+intercept <- c(log(pi1/pi2) - 0.5*t(mu1hat+mu2hat)%*%solve(Sigmahat)%*%(mu1hat-mu2hat))
+slope <- solve(Sigmahat)%*%(mu1hat-mu2hat)
 
 b0 <- intercept/(-slope[2])
 b1 <- slope[1]/(-slope[2])
