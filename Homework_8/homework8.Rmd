@@ -1,0 +1,60 @@
+---
+title: "Homework 8"
+author: "Daria Barbour-Brown, Warren Kennedy, Bailey Ho"
+date: "2023-05-28"
+output: html_document
+---
+
+### Conceptual Problem 
+#### *1. Explain, in your own words, how a random forest makes predictions.*
+
+A random forest uses trees as building blocks to construct more powerful prediction models. This method is an adaptation of Bagging, i.e bootstrap aggregation, where we generate multiple bootstrapped training datasets, train a model on each set, and average all the predictions to obtain our bagging estimator. Random forests provide an improvement over bagged trees by randomizing the sample of predictors that can be used for splitting trees at each split of every bagged tree. This adaption decorrelates the bagged trees from each other increasing the variation accounted for by each tree, thereby making the average of the resulting trees less variable and more reliable. Our final random forest bagging estimator will be used for prediction. 
+
+### Application Problems
+#### *2. Using a linear model, predict bikers with the other variables in Bikeshare (excluding casual and registered). Make sure to use the variables in their appropriate form (i.e. numeric or factors as relevant to the context of the problem.) Perform variable selection as needed to get a strong predictive model. Use training/test splits of your choice and report a RMSE that describes your model’s performance.*
+
+```{r}
+library(ISLR2)
+library(MASS)
+data <- Bikeshare
+set.seed(1)
+train <- sample(nrow(data), 0.8 * nrow(data))
+train_set <- data[train, ]
+test_set <- data[-train, ]
+bikes <- lm(bikers ~ . - casual - registered, data = train_set)
+model <- stepAIC(bikes, direction = "both")
+predict_test <- predict(model, newdata = test_set)
+rmse <- sqrt(mean((test_set$bikers - predict_test)^2))
+rmse
+```
+
+#### *3. Explain your approach in 1, including how you coded variables (as numeric or factor), variable selection procedure, and training/test splits you decided to use.*
+
+
+
+#### *4.Using a random forest, predict bikers with the other variables in Bikeshare (excluding casual and registered). Make sure to use the variables in their appropriate form (i.e. numeric or factors as relevant to the context of the problem.) Perform model tuning to get a strong predictive model. Use training/test/validation splits of your choice and report a RMSE that describes your model’s performance.*
+```{r}
+library(randomForest)
+set.seed(1)
+train <- sample(nrow(data), 0.8 * nrow(data))
+train_set <- data[train, ]
+test_set <- data[-train, ]
+bikes <- randomForest(bikers ~ . - casual - registered, data = train_set, mtry = 6, importance = TRUE)
+
+test_predict <- predict(bikes, newdata = test_set)
+rmse <- sqrt(mean((test_set$bikers - test_predict)^2))
+rmse
+```
+
+#### *5. Explain your approach in 3, including how you coded variables (as numeric or factor), variable selection procedure, and training/test splits you decided to use.*
+
+
+
+#### *6. Plot variable importances of your final random forest. Compare these with the linear regression output. Does the random forest find the same variables to be important as the linear regression?*
+```{r}
+importance(bikesRF)
+```
+```{r}
+varImpPlot(bikesRF)
+```
+Both linear regression and random variables find the "hr" variable to be important, but the second most important are not the same.
