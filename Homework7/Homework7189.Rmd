@@ -2,7 +2,9 @@
 title: "Homework 7"
 author: "Daria Barbour-Brown, Warren Kennedy, Bailey Ho"
 date: "2023-05-16"
-output: html_document
+output:
+  pdf_document: default
+  html_document: default
 ---
 ### Conceptual Problem 
 #### *1. Linear discriminant analysis and logistic regression can both be used for binary classification. How would you decide to use one method versus the other in practice?*

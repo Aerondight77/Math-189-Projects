@@ -9,11 +9,9 @@
 <meta http-equiv="X-UA-Compatible" content="IE=EDGE" />
 
 
-<meta name="author" content="Daria Barbour-Brown, Warren Kennedy, Bailey Ho" />
 
-<meta name="date" content="2023-05-16" />
 
-<title>Homework 7</title>
+<title>Final Project</title>
 
 <script>// Pandoc 2.9 adds attributes on both header and div. We remove the former (to
 // be compatible with the behavior of Pandoc < 2.8).
@@ -350,102 +348,134 @@ display: none;
 
 
 
-<h1 class="title toc-ignore">Homework 7</h1>
-<h4 class="author">Daria Barbour-Brown, Warren Kennedy, Bailey Ho</h4>
-<h4 class="date">2023-05-16</h4>
+<h1 class="title toc-ignore">Final Project</h1>
+<h4 class="author"><div class="line-block">Math 189<br />
+Spring 2023<br />
+Dr. Daniel Ries</div></h4>
+<h4 class="date">Due: 6/9/23 11:59PM PT</h4>
 
 </div>
 
+<div id="TOC">
+<ul>
+<li><a href="#application-problems" id="toc-application-problems">Application Problems</a></li>
+<li><a href="#conceptual-problems" id="toc-conceptual-problems">Conceptual Problems</a></li>
+</ul>
+</div>
 
-<div id="conceptual-problem" class="section level3">
-<h3>Conceptual Problem</h3>
-<div id="linear-discriminant-analysis-and-logistic-regression-can-both-be-used-for-binary-classification.-how-would-you-decide-to-use-one-method-versus-the-other-in-practice" class="section level4">
-<h4><em>1. Linear discriminant analysis and logistic regression can both
-be used for binary classification. How would you decide to use one
-method versus the other in practice?</em></h4>
-<p>Linear discriminant analysis assumes certain properties of the data,
-such as the normality and equality of variances in each class. If these
-assumptions are not me, LDA my not preform the way we need it to.
-Logistic regression makes fewer assumptions about the data distribution,
-making it a more flexible method to use when LDA assumptions are not
-met.</p>
-<p>Logistic regression provides direct estimates of class membership
-probabilities. It gives us a good interpretation of the relationship
-between predictor variables and a binary outcome. From a logistic
-regression we may attain “odds ratios” and p-values, which we use to
-assess the impact of individual predictors. LDA does not directly
-estimate these probabilities but provides functions for classifying new
-observations. LDA focuses more on the separation between classes rather
-than individual predictors.</p>
-<p>Lastly, when our sample size is large compared to the number of
-predictors, LDA performs well. In this case. LDA will more reliably
-estimate these parameters. On the other hand, logistic regression is
-better suited for smaller sample sizes with flexibility to deal with
-higher numbers of predictors. If you are dealing with high-dimensional
-data with more predictors than observations, logistic regression is
-considered to be more appropriate.</p>
+<p>You may ask for clarifications from your instructor or TAs, but do
+not ask them if your answer is correct or not.</p>
+<p>The same rules as the homeworks apply. You may work in groups of up
+to 3. Submit your final project as a pdf generated in RMarkdown just as
+in your homeworks.</p>
+<div id="application-problems" class="section level1 unnumbered">
+<h1 class="unnumbered">Application Problems</h1>
+<ol style="list-style-type: decimal">
+<li><p>Consider the <code>Carseats</code> data in the <code>ISLR2</code>
+package.</p>
+<ol style="list-style-type: lower-alpha">
+<li>Fit a linear regression model with <code>Sales</code> as the
+response and all other variables as covariates. Report the coefficient
+estimates.</li>
+<li>Determine whether the linear model is appropriate.</li>
+<li>Let <span class="math inline">\(\beta_1\)</span> and <span class="math inline">\(\beta_2\)</span> be the coefficients for
+<code>CompPrice</code> and <code>Income</code>, respectively. Test the
+hypothesis that <span class="math inline">\(\beta_1=\beta_2=0\)</span>.
+State your hypothesis, test statistic, and test statistic’s distribution
+clearly. Choose an <span class="math inline">\(\alpha\)</span> you feel
+is appropriate.</li>
+</ol>
+<p><br></p></li>
+<li><p>Consider the <code>Carseats</code> data again.</p>
+<ol style="list-style-type: lower-alpha">
+<li><p>Split the data into a training set and a validation set. State
+the proportions of your training/validation split.</p></li>
+<li><p>Fit a ridge regression model on the training data, choosing the
+<span class="math inline">\(\lambda\)</span> by cross-validation and
+reporting the final coefficients. Choose an appropriate value for <span class="math inline">\(K\)</span> when doing cross-validation.</p></li>
+<li><p>Report the RMSE using the validation set on the model from
+2b.</p></li>
+<li><p>Fit a random forest model on the training data, and report the
+RMSE on the validation set.</p></li>
+<li><p>For both of the models you fit in (b) and (d), give an example
+why a marketing team would prefer one model over the other.</p>
+<p><br></p></li>
+</ol></li>
+<li><p>In this question, you will simulate data to perform regression
+between <span class="math inline">\(X\)</span> and <span class="math inline">\(Y\)</span>.</p>
+<ol style="list-style-type: lower-alpha">
+<li><p>Use the <code>rt()</code> function to generate a predictor <span class="math inline">\(X\)</span> of length <span class="math inline">\(n=200\)</span>. Set <code>df=15</code> for <span class="math inline">\(X\)</span></p></li>
+<li><p>Use <code>rt()</code> to generate a noise vector <span class="math inline">\(\epsilon\)</span>. Set <code>df=5</code>.</p></li>
+<li><p>Generate a response vector <span class="math inline">\(Y\)</span>
+of length <span class="math inline">\(n\)</span> according to: <span class="math display">\[Y=5+2sin(X)-7\times \frac{exp(2\times
+cos(X))}{1+exp(2\times cos(X))}+\epsilon\]</span></p></li>
+<li><p>Fit polynomial regression for <span class="math inline">\(Y\)</span> on <span class="math inline">\(X\)</span> with the order of <span class="math inline">\(X\)</span> ranging from 1 to 5. (i.e. <span class="math inline">\(Y=\beta_0+\beta_1X+\epsilon, Y=\beta_0+\beta_1X +
+\beta_2X^2 +\epsilon,...,Y=\beta_0+\beta_1X + \beta_2X^2 \beta_3X^3 +
+\beta_4X^4 + \beta_5X^5+\epsilon)\)</span> and plot each of the five
+model fits, in different colors and with a legend, on top of your
+simulated data.</p></li>
+<li><p>Which one of these models do you prefer? Justify your
+answer.</p></li>
+<li><p>For the model <span class="math inline">\(Y=\beta_0+\beta_1X +
+\beta_2X^2 +\epsilon\)</span>,compute a 90% confidence interval at <span class="math inline">\(X=1\)</span> using least squares theory. Provide
+an interpretation for this interval.</p></li>
+<li><p>For the model <span class="math inline">\(Y=\beta_0+\beta_1X +
+\beta_2X^2 +\epsilon\)</span>,compute a 90% confidence interval at <span class="math inline">\(X=1\)</span> using a bootstrap. Provide an
+interpretation for this interval.</p>
+<p><br></p></li>
+</ol></li>
+<li><p>Consider the <code>College</code> data set in the
+<code>ISLR2</code> package.</p>
+<ol style="list-style-type: lower-alpha">
+<li><p>Split the data set into a training and validation set.</p></li>
+<li><p>Perform logistic regression on the training data to predict the
+variable <code>Private</code> using all other variables. Provide an
+interpretation of the coefficient for <code>Top10Perc</code>.</p></li>
+<li><p>What is the test error for the logistic regression (justify your
+selection of your threshold)?</p></li>
+<li><p>Fit an LDA to the same model, and report the test error.</p></li>
+<li><p>Fit an QDA to the same model, and report the test error.</p></li>
+<li><p>Fit an SVM to the same model, and report the test error.</p></li>
+<li><p>Pick which model you think is the best and explain your
+choice.</p>
+<p><br></p></li>
+</ol></li>
+<li><p>For this problem use the <code>protein.csv</code> file which
+contains protein consumption in twenty-five European countries for nine
+food groups. It is available in the <code>MultBiplotR</code> R
+package.</p>
+<ol style="list-style-type: lower-alpha">
+<li><p>Perform principal component analysis on these data (omitting
+variables <code>Comunist</code> and <code>Region</code>). Report the
+proportion of variance and cumulative proportion of variance explained
+by the first 5 principal components.</p></li>
+<li><p>Provide an interpretation of the first two principal
+components.</p></li>
+<li><p>Create a biplot for the first two principal components. Based on
+this plot, which variable(s) is <code>Milk</code> most correlated with?
+Which variable(s) is <code>Milk</code> most negatively correlated with?
+Which variables is <code>Milk</code> uncorrelated with?</p></li>
+<li><p>Comment on the differences between countries in the North
+<code>Region</code> and Central <code>Region</code> using only the first
+two principal components and the respective interpretations of those
+principal components.</p>
+<p><br></p></li>
+</ol></li>
+</ol>
 </div>
-</div>
-<div id="application-problems" class="section level3">
-<h3>Application Problems</h3>
-<div id="fiting-a-logistic-regression-model-with-continuous-covariate-and-categorical-covariate." class="section level4">
-<h4><em>2. Fiting a logistic regression model with continuous covariate
-and categorical covariate.</em></h4>
-</div>
-<div id="a-fit-a-logistic-regression-with-diabetes-yn-as-the-response-and-glucose-levels-as-a-covariate-as-well-as-an-indicator-for-an-individual-having-a-bmi-greater-than-35-bmi-is-given-by-mass-in-this-dataset.-print-the-summary-of-this-regression-object." class="section level4">
-<h4><em>(a) Fit a logistic regression with diabetes (Y/N) as the
-response, and glucose levels as a covariate, as well as an indicator for
-an individual having a BMI greater than 35 (BMI is given by mass in this
-dataset). Print the summary of this regression object.</em></h4>
-</div>
-<div id="b-plot-glucose-levels-versus-diabetes-yn.-add-the-predicted-probability-of-having-diabetes-as-a-function-of-glucose-for-i-individuals-with-bmi-35-and-ii-for-individuals-with-bmi-35." class="section level4">
-<h4><em>(b) Plot glucose levels versus diabetes (Y/N). Add the predicted
-probability of having diabetes as a function of glucose, for (i)
-individuals with BMI &lt;35, and (ii) for individuals with BMI
-&gt;35.</em></h4>
-</div>
-<div id="c-add-95-confidence-intervals-for-the-predicted-probability-of-having-diabetes-to-your-plots-for-both-predictions-in-b.-see-below-for-an-example-of-what-your-plot-should-look-like." class="section level4">
-<h4><em>(c) Add 95% confidence intervals for the predicted probability
-of having diabetes to your plots for both predictions in (b). (See below
-for an example of what your plot should look like.)</em></h4>
-</div>
-<div id="lda" class="section level4">
-<h4><em>3.LDA</em></h4>
-</div>
-<div id="a-split-the-data-into-trainingtesting-sets-with-80-training.-fit-a-lda-model-with-diabetes-yn-as-the-response-and-glucose-and-bmi-as-covariates-use-the-actual-bmi-values-this-time." class="section level4">
-<h4><em>(a) Split the data into training/testing sets, with 80%
-training. Fit a LDA model with diabetes (Y/N) as the response and
-glucose and BMI as covariates (use the actual BMI values this
-time.)</em></h4>
-</div>
-<div id="b-plot-glucose-versus-bmi-and-color-the-points-by-their-true-diabetes-class-yn-for-the-test-set." class="section level4">
-<h4><em>(b) Plot glucose versus BMI and color the points by their true
-diabetes class (Y/N) for the test set.</em></h4>
-</div>
-<div id="c-add-the-lda-decision-boundary-for-the-model-fit-in-a." class="section level4">
-<h4><em>(c) Add the LDA decision boundary for the model fit in
-(a).</em></h4>
-</div>
-<div id="d-print-the-2x2-confusion-matrix-of-the-predictions-on-the-test-set-versus-their-true-values.-comment-on-the-performance-of-lda-for-predicting-diabetes-using-glucose-and-bmi." class="section level4">
-<h4><em>(d) Print the 2x2 confusion matrix of the predictions on the
-test set versus their true values. Comment on the performance of LDA for
-predicting diabetes using glucose and BMI.</em></h4>
-</div>
-<div id="qda" class="section level4">
-<h4><em>4. QDA</em></h4>
-</div>
-<div id="a-using-the-same-traintest-split-as-in-2a-fit-a-qda-with-the-same-variables." class="section level4">
-<h4><em>(a) Using the same train/test split as in 2a, fit a QDA with the
-same variables.</em></h4>
-</div>
-<div id="b-print-the-2x2-confusion-matrix-of-the-predictions-on-the-test-set-versus-their-true-values." class="section level4">
-<h4><em>(b) Print the 2x2 confusion matrix of the predictions on the
-test set versus their true values.</em></h4>
-</div>
-<div id="c-compare-the-predictions-of-lda-versus-qda.-which-model-would-you-recommend-in-this-case" class="section level4">
-<h4><em>(c) Compare the predictions of LDA versus QDA. Which model would
-you recommend in this case?</em></h4>
-</div>
+<div id="conceptual-problems" class="section level1 unnumbered">
+<h1 class="unnumbered">Conceptual Problems</h1>
+<ol start="6" style="list-style-type: decimal">
+<li><p>Explain why the bootstrap may be more beneficial for random
+forest than it would be for linear regression.</p>
+<p><br></p></li>
+<li><p>Give an example of a scenario where you test multiple hypotheses
+but would not want to corect for FEWR or FDR.</p>
+<p><br></p></li>
+<li><p>Why is it necessary to be aware of a model’s assumptions, and
+check those assumptions before using the trained model for inference or
+prediction?</p></li>
+</ol>
 </div>
 
 

@@ -1,0 +1,234 @@
+---
+title: "Math189 Final Project"
+author: "Daria Barbour-Brown"
+date: "2023-05-25"
+output:
+  html_document: default
+  pdf_document: default
+---
+### Application Problems
+#### 1. Consider the Carseats data in the ISLR2 package.
+##### (a) Fit a linear regression model with Sales as the response and all other variables as covariates. Report the coefficient estimates.
+
+```{r}
+library(ISLR2)
+data("Carseats")
+```
+
+```{r}
+#Categorical cov
+#ShelveLoc: Good, Medium, Bad
+#Urban: Yes/No 
+#US: Yes/No
+#Education: 10:18
+
+lm.fit <- lm(Sales ~ ., data = Carseats)
+summary(lm.fit)
+
+
+```
+
+
+##### (b) Determine whether the linear model is appropriate.
+```{r} 
+par(mfrow = c(2,2))
+plot(Carseats[["CompPrice"]], Carseats$Sales, main = paste("Scatter of", xlab = "CompPrice", ylab="Sales"))
+plot(Carseats[["Income"]], Carseats$Sales, main = paste("Scatter of", xlab = "Income", ylab="Sales"))
+plot(Carseats[["Advertising"]], Carseats$Sales, main = paste("Scatter of", xlab = "Advertising", ylab="Sales"))
+plot(Carseats[["Population"]], Carseats$Sales, main = paste("Scatter of", xlab = "Population", ylab="Sales"))
+par(mfrow = c(1,2))
+plot(Carseats[["Price"]], Carseats$Sales, main = paste("Scatter of", xlab = "Price", ylab="Sales"))
+plot(Carseats[["Age"]], Carseats$Sales, main = paste("Scatter of", xlab = "Age", ylab="Sales"))
+
+
+
+
+
+
+```
+We see one or two outliers in the x-direction in CompPrice and Sales but none of theme seem to be high leverage based on magnitude. The linear regression should not be too egregiously biased by these data points. 
+
+```{r}
+par(mfrow = c(2, 2))
+plot(lm.fit)
+```
+
+Plotting Residuals vs. Fitted Values (our y-values), the data points do not seem to show any systematic deviations from randomness. homoscedasticity holds.   
+Linear regression assumes normality. The QQ plot shows that Residuals vs the expected quantiles for a normal do not deviate too far from having a linear relationship, our normality assumption is met.
+We conclude that this linear model is appropriate although based on the scatter plots above, it seems that some covatiates are not corralated with Sales and could potentially be removed from the model. 
+
+
+
+##### (c) Let $\beta_1$ and $\beta_2$ be the coefficients for CompPrice and Income, respectively. Test the hypothesis that $\beta_1$=$\beta_2$=0. State your hypothesis, test statistic, and test statistic’s distribution clearly. Choose an $\alpha$ you feel is appropriate.
+
+```{r}
+lm.fit <- lm(Sales ~ CompPrice, data = Carseats)
+summary(lm.fit)
+```
+
+P-val is approximately 0.201, if we use $\alpha$=0.05, we keep the null hypothesis that $\beta_1$=0, the covariate CompPrice does not significantly effect Sales. 
+
+```{r}
+lm.fit <- lm(Sales ~ Income, data = Carseats)
+summary(lm.fit)
+```
+P-val is approximately 0.002, if we use $\alpha$=0.05, we reject the null hypothesis that $\beta_1$=0, it seems that the effect of Income on Sales is statistically significant. 
+
+#### 2. Consider the Carseats data again.
+##### (a) Split the data into a training set and a validation set. State the proportions of your training/validation split.
+```{r}
+#We want to use a training set approach for cross-validation techniques to find a lambda that can best explain how many covariate to include in our model (dimension reduction)
+
+x <- model.matrix(Sales ~ ., Carseats)[, -1]
+y <- Carseats$Sales
+
+set.seed(1)
+train <- sample(1:nrow(x), nrow(x) / 2)
+test <- (-train)
+y.test <- y[test]
+
+
+```
+Training set split: 1/2 of data
+Test set: 1/2
+
+##### (b)Fit a ridge regression model on the training data, choosing the $\lambda$ by cross-validation and reporting the final coefficients. Choose an appropriate value for K when doing cross-validation.
+```{r}
+library(glmnet)
+cv.out <- cv.glmnet(x[train, ], y[train], alpha = 0, nfolds = 5) 
+plot(cv.out)
+```
+
+```{r}
+bestLambda <- cv.out$lambda.min
+bestLambda
+
+#The best ridge regression model has lambda corresponding to smallest MSE
+ridge.mod <- glmnet(x, y, alpha = 0, lambda = bestLambda)
+ridge.mod$beta
+```
+
+##### (c) Report the RMSE using the validation set on the model from 2b.
+```{r}
+
+ridge.pred <- predict(ridge.mod, s = bestLambda, newx = x[test, ])
+#Calculating RMSE Root Mean Square Error
+sqrt(mean((ridge.pred - y.test)^2))
+```
+
+
+##### (d) Fit a random forest model on the training data, and report the RMSE on the validation set.
+```{r}
+#fit using training 
+library(randomForest)
+
+set.seed(1)
+rf.carseats <- randomForest(Sales ~ ., data = Carseats,
+    subset = train, mtry = 11/3, importance = TRUE)    #TODO Choose mrty!!!
+yhat.rf <- predict(rf.carseats, newdata = x[test, ])
+
+#get RMSE using test
+mean((yhat.rf - y.test)^2)
+```
+
+##### (e) For both of the models you fit in (b) and (d), give an example why a marketing team would prefer one model over the other.
+  A marketing tear might prefer to use the Random Forest model is they are presenting to higher-ups in the company or some other "non-experts". This is because trees are quite easy to explain and mimic the natural human decision-making process. Random forests also give an easily understood estimate about which features in the model have the most significant impact on the target variable, Sales. This could be valuable for marketing teams to make data-driven decisions while providing nice illustrations to back their findings.  
+  
+  Ridge regression estimates the impact of each feature on the target variable through its coefficients. This could be valuable in marketing when it is necessary to communicate the specific influence of different variables on Sales. Ridge regression shrinks the coefficients of less important features towards zero which might be advantageous when dealing with a large number of predictors. 
+
+
+
+#### 3. In this question, you will simulate data to perform regression between X and Y.
+##### (a) Use the rt() function to generate a predictor X of length n=200. Set df=15 for X
+```{r}
+
+X <-rt(n=200, df=15)
+sorted_idx = order(X)
+X = X[sorted_idx]
+#X = seq(0,100, len = 200)
+```
+
+##### (b) Use rt() to generate a noise vector $\epsilon$. Set df=5.
+```{r}
+epsilon <- rt(n=200, df=5)
+```
+
+##### (c) Generate a response vector Y of length n according to: $Y=5+2sin(X)− \frac{(7*\exp(2*cos(X)}{1+\exp(2*cos(X)} +\epsilon$
+```{r}
+Y <- 5+2*sin(X)-(7*exp(2*cos(X))/(1+exp(2*cos(X)))) + epsilon
+
+```
+
+##### (d) Fit polynomial regression for Y on X with the order of X ranging from 1 to 5. (i.e.Y=β0+β1X+ϵ,Y=β0+β1X+β2X2+ϵ,...,Y=β0+β1X+β2X2β3X3+β4X4+β5X5+ϵ) and plot each of the five model fits, in different colors and with a legend, on top of your simulated data.
+```{r}
+#data <- data.frame(X=X, Y=Y)
+#pts = seq(0,100, len = 200)
+plot(X,Y)
+colors <- sample(colors(),5)
+for (p in 1:5){
+  fit = lm(Y ~ poly(X,p))
+  val = predict(fit,data.frame(X = X))
+  
+  lines(X,val,col =colors[p],lwd= 2)
+
+}
+
+
+```
+
+
+##### (e) Which one of these models do you prefer? Justify your answer.
+
+##### (f) For the model Y=β0+β1X+β2X2+ϵ, compute a 90% confidence interval at X=1 using least squares theory. Provide an interpretation for this interval.
+
+##### (g) For the model Y=β0+β1X+β2X2+ϵ, compute a 90% confidence interval at X=1 using a bootstrap. Provide an interpretation for this interval.
+
+
+
+#### 4. Consider the College data set in the ISLR2 package.
+##### (a) Split the data set into a training and validation set.
+```{r}
+data("College")
+```
+
+##### (b) Perform logistic regression on the training data to predict the variable Private using all other variables. Provide an interpretation of the coefficient for Top10Perc.
+
+##### (c) What is the test error for the logistic regression (justify your selection of your threshold)?
+##### (d) Fit an LDA to the same model, and report the test error.
+
+##### (e) Fit an QDA to the same model, and report the test error.
+
+##### (f) Fit an SVM to the same model, and report the test error.
+
+##### (g) Pick which model you think is the best and explain your choice.
+
+
+
+#### 5. For this problem use the protein.csv file which contains protein consumption in twenty-five European countries for nine food groups. It is available in the MultBiplotR R package.
+##### (a) Perform principal component analysis on these data (omitting variables Comunist and Region). Report the proportion of variance and cumulative proportion of variance explained by the first 5 principal components.
+```{r}
+
+
+```
+
+
+##### (b) Provide an interpretation of the first two principal components.
+
+##### (c) Create a biplot for the first two principal components. Based on this plot, which variable(s) is Milk most correlated with? Which variable(s) is Milk most negatively correlated with? Which variables is Milk uncorrelated with?
+
+##### (d) Comment on the differences between countries in the North Region and Central Region using only the first two principal components and the respective interpretations of those principal components.
+
+
+
+### Conceptual Problems
+#### 6. Explain why the bootstrap may be more beneficial for random forest than it would be for linear regression.
+
+#### 7. Give an example of a scenario where you test multiple hypotheses but would not want to corect for FEWR or FDR.
+
+#### 8. Why is it necessary to be aware of a model’s assumptions, and check those assumptions before using the trained model for inference or prediction?
+
+
+
+
+
+
