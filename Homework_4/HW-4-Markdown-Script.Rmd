@@ -1,10 +1,8 @@
 ---
-title: "Homework 4: Hypothesis Testing"
-author: |
-  |Daria Barbour-Brown
-  |Bailey Ho
-  |Warren Kennedy
-date: "Last Updated: `r format(Sys.time(), '%B %d, %Y')`"
+title: 'Homework 4: Hypothesis Testing'
+author: "|Daria Barbour-Brown\n|Bailey Ho\n|Warren Kennedy\n"
+date: 'Last Updated: `r format(Sys.time(), ''%B %d, %Y'')`'
+output: pdf_document
 ---
 
 ```{r setup, include=FALSE}
