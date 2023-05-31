@@ -9,6 +9,8 @@ output:
 # SEE PROFESSOR
 - Question 1, part C
 - Question 2, part D
+- Q 3 part E !!!
+- Validating vs Test set??
 
 
 
@@ -197,29 +199,34 @@ cv.error.5
 
 ##### (f) For the model Y=β0+β1X+β2X2+ϵ, compute a 90% confidence interval at X=1 using least squares theory. Provide an interpretation for this interval.
 ```{r}
+#90% CI !!???
 fit = lm(Y ~ poly(X,2))
-ci = predict(fit,data.frame(X=1),interval = "confidence")
+ci = predict(fit, data.frame(X=1), level = 0.90, interval = "confidence")
 ci
 ```
+90% CI: [0.6640983, 1.141839]
 
 ##### (g) For the model Y=β0+β1X+β2X2+ϵ, compute a 90% confidence interval at X=1 using a bootstrap. Provide an interpretation for this interval.
 
 ```{r}
-B=1
+B=200
 beta_0 = 1:B
 beta_1 = 1:B
 beta_2 = 1:B
-#for(b in 1:B)
-#{
-  index = sample(1:200, replace=T)
-  index
+for(b in 1:B)
+{
+  index = sample(1:200, replace = T)
+  
   fit = lm(Y[index] ~ poly(X[index], 3))
   coefficients <- coef(fit)
   beta_0[b] = coefficients[1]
   beta_1[b] = coefficients[2]
   beta_2[b] = coefficients[3]
-```
+}
 
+
+```
+****** NEED TO PROVIDE INTERPRETATION 
 
 #### 4. Consider the College data set in the ISLR2 package.
 ##### (a) Split the data set into a training and validation set.
@@ -229,19 +236,11 @@ data(College)
 
 
 ```{r}
-#We have one categorical feature "Private": Yes/No
-
 set.seed(4)
-train = sample(399, 399*.8)
+train = sample(nrow(College), nrow(College)*.8)
 train_set <- College[train, ]
 test_set <- College[-train, ]
 
-#Create numeric col of all 1s
-#College$response <- 1
-#Transform "Private" string col to categorical 
-#College$response[College$Private == 'No'] <- 0
-
-#dfNew <- subset(College, select = -Private)
 ```
 
 ##### (b) Perform logistic regression on the training data to predict the variable Private using all other variables. Provide an interpretation of the coefficient for Top10Perc.
@@ -249,9 +248,9 @@ test_set <- College[-train, ]
 logRegMulti <- glm(Private ~ ., data=College, family="binomial")
 summary(logRegMulti)
 ```
-$\beta_5$ = -7.581e-09 corresponding to Top10perc
+$\beta_4$ = 8.451e-03 corresponding to Top10perc
 
-A negative coefficient indicates that an increase in the feature's value is associated with a decrease in the log-odds of the target variable Private. In this case, as a college leans more towards a top-10 rating, the likelihood of being a Private school decreases. 
+A positive coefficient indicates that an increase in the feature's value is associated with a increase in the log-odds of the target variable Private. In this case, as a college leans more towards a top-10 rating, the likelihood of being a Private school increases.  
 
 
 ##### (c) What is the test error for the logistic regression (justify your selection of your threshold)?
@@ -291,10 +290,21 @@ A negative coefficient indicates that an increase in the feature's value is asso
 ### Conceptual Problems
 #### 6. Explain why the bootstrap may be more beneficial for random forest than it would be for linear regression.
 
+  Random forest models can handle high-dimensional data where linear regression may suffer from overfitting or high variance in the case where number of observations is smaller than the number of features. Using a bootstrap sample in random forests helps to mitigate this issue of overfitting by creating subsets of the data during each tree's construction.
+
+******* ??? Random forest is a non-parametric algorithm capable of capturing nonlinear relationships and interactions between variables. Linear regression assumes a linear relationship between predictors and the response, which may not adequately capture complex patterns present in the data. The bootstrap sampling used in random forests allows each tree to learn different aspects of the data, enabling the model to capture nonlinearity and interactions more effectively.
+
+  In the case where our features have high correlation, linear regression models may return unreliable coefficient estimates. Random forests can overcome this correlation problem randomly subsets of predictors at each split, reducing the impact of highly correlated variables. Bootstrapping further enhances this capability by sampling from the original data set (with replacement) and thus creating diverse subsets of the data. 
+
 #### 7. Give an example of a scenario where you test multiple hypotheses but would not want to corect for FEWR or FDR.
+
+  We may want to abstain from correcting for FWER or FDR if we are in the initial stages of a data research project. At this stage of data science, we many simply be looking to identify patterns in the data and may not yet have concrete hypotheses we are interested in testing. During exploratory data analysis it is our job to test multiple hypotheses and then decide which of them we are most interested in confirming or rejecting. At this point it is not our goal to restrict error rates since doing so could also restrict our ability to fully explore the data. It does not make sense to confine hypotheses conclusions such as Type-1/2 error when we have not yet established the specific claims we wish to test. 
+
 
 #### 8. Why is it necessary to be aware of a model’s assumptions, and check those assumptions before using the trained model for inference or prediction?
 
+  Violating model assumptions can lead to biased parameter estimates and incorrect hypothesis tests and confidence intervals. When it comes to inference and prediction, validating these assumptions assures we can construct a reliable model to fit our data. The prediction accuracy of a model may suffer if it's assumptions are not met. 
+  
 
 
 
