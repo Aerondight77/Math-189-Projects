@@ -122,17 +122,18 @@ sqrt(mean((ridge.pred - y.test)^2))
 #fit using training 
 library(randomForest)
 
-set.seed(1)
-rf.carseats <- randomForest(Sales ~ ., data = Carseats,
-    subset = train, mtry = 11/3, importance = TRUE)    #TODO Choose mrty!!!
-yhat.rf <- predict(rf.carseats, newdata = x[test, ])
+#set.seed(1)
+rf.carseats <- randomForest(Sales ~ ., data = Carseats, subset = train, mtry = 11/3, importance = TRUE)    #TODO Choose mrty!!!
+yhat.rf <- predict(rf.carseats, newdata = Carseats[test, ])
 
 #get RMSE using test
-mean((yhat.rf - y.test)^2)
+sqrt(mean((yhat.rf - y.test)^2))
+importance(rf.carseats)
+varImpPlot(rf.carseats)
 ```
 
 ##### (e) For both of the models you fit in (b) and (d), give an example why a marketing team would prefer one model over the other.
-  A marketing tear might prefer to use the Random Forest model is they are presenting to higher-ups in the company or some other "non-experts". This is because trees are quite easy to explain and mimic the natural human decision-making process. Random forests also give an easily understood estimate about which features in the model have the most significant impact on the target variable, Sales. This could be valuable for marketing teams to make data-driven decisions while providing nice illustrations to back their findings.  
+  A marketing team might prefer to use the Random Forest model if they are presenting to higher-ups in the company or some other "non-experts". This is because trees are quite easy to explain and mimic the natural human decision-making process. Random forests also give an easily understood estimate about which features in the model have the most significant impact on the target variable, Sales. This could be valuable for marketing teams to make data-driven decisions while providing nice illustrations to back their findings.  
   
   Ridge regression estimates the impact of each feature on the target variable through its coefficients. This could be valuable in marketing when it is necessary to communicate the specific influence of different variables on Sales. Ridge regression shrinks the coefficients of less important features towards zero which might be advantageous when dealing with a large number of predictors. 
 
@@ -141,7 +142,8 @@ mean((yhat.rf - y.test)^2)
 #### 3. In this question, you will simulate data to perform regression between X and Y.
 ##### (a) Use the rt() function to generate a predictor X of length n=200. Set df=15 for X
 ```{r}
-
+#this does not make sense 
+set.seed(15)
 X <-rt(n=200, df=15)
 sorted_idx = order(X)
 X = X[sorted_idx]
@@ -180,21 +182,72 @@ for (p in 1:5){
 ##### (e) Which one of these models do you prefer? Justify your answer.
 
 ##### (f) For the model Y=β0+β1X+β2X2+ϵ, compute a 90% confidence interval at X=1 using least squares theory. Provide an interpretation for this interval.
+```{r}
+fit = lm(Y ~ poly(X,2))
+ci = predict(fit,data.frame(X=1),interval = "confidence")
+ci
+```
 
 ##### (g) For the model Y=β0+β1X+β2X2+ϵ, compute a 90% confidence interval at X=1 using a bootstrap. Provide an interpretation for this interval.
 
+```{r}
+B=1
+beta_0 = 1:B
+beta_1 = 1:B
+beta_2 = 1:B
+#for(b in 1:B)
+#{
+  index = sample(1:200, replace=T)
+  index
+  fit = lm(Y[index] ~ poly(X[index], 3))
+  coefficients <- coef(fit)
+  beta_0[b] = coefficients[1]
+  beta_1[b] = coefficients[2]
+  beta_2[b] = coefficients[3]
+```
 
 
 #### 4. Consider the College data set in the ISLR2 package.
 ##### (a) Split the data set into a training and validation set.
 ```{r}
-data("College")
+data(College)
+```
+
+
+```{r}
+#We have one categorical feature "Private": Yes/No
+
+set.seed(4)
+train = sample(399, 399*.8)
+train_set <- College[train, ]
+test_set <- College[-train, ]
+
+#Create numeric col of all 1s
+#College$response <- 1
+#Transform "Private" string col to categorical 
+#College$response[College$Private == 'No'] <- 0
+
+#dfNew <- subset(College, select = -Private)
 ```
 
 ##### (b) Perform logistic regression on the training data to predict the variable Private using all other variables. Provide an interpretation of the coefficient for Top10Perc.
+```{r}
+logRegMulti <- glm(Private ~ ., data=College, family="binomial")
+summary(logRegMulti)
+```
+$\beta_5$ = -7.581e-09 corresponding to Top10perc
+
+A negative coefficient indicates that an increase in the feature's value is associated with a decrease in the log-odds of the target variable Private. In this case, as a college leans more towards a top-10 rating, the likelihood of being a Private school decreases. 
+
 
 ##### (c) What is the test error for the logistic regression (justify your selection of your threshold)?
 ##### (d) Fit an LDA to the same model, and report the test error.
+```{r}
+#lda_fit <- lda(response ~ glucose + mass, data = pimaData,
+    #subset = train)
+#lda_fit
+```
+
 
 ##### (e) Fit an QDA to the same model, and report the test error.
 
