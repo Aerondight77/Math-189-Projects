@@ -6,113 +6,119 @@ output:
   html_document: default
   pdf_document: default
 ---
+# SEE PROFESSOR
+- Question 1, part C
+- Question 2, part D
+
+
+
+
+
 ### Application Problems
 #### 1. Consider the Carseats data in the ISLR2 package.
 ##### (a) Fit a linear regression model with Sales as the response and all other variables as covariates. Report the coefficient estimates.
 
 ```{r}
+# Loading Caeseat Data
 library(ISLR2)
 data("Carseats")
 ```
 
 ```{r}
-#Categorical cov
-#ShelveLoc: Good, Medium, Bad
-#Urban: Yes/No 
-#US: Yes/No
-#Education: 10:18
-
+# Fit Linear Regression Model
 lm.fit <- lm(Sales ~ ., data = Carseats)
-summary(lm.fit)
 
+# Report Coefficient Estimates
+summary(lm.fit)
+coefficients(lm.fit)
 
 ```
 
 
 ##### (b) Determine whether the linear model is appropriate.
 ```{r} 
-par(mfrow = c(2,2))
-plot(Carseats[["CompPrice"]], Carseats$Sales, main = paste("Scatter of", xlab = "CompPrice", ylab="Sales"))
-plot(Carseats[["Income"]], Carseats$Sales, main = paste("Scatter of", xlab = "Income", ylab="Sales"))
-plot(Carseats[["Advertising"]], Carseats$Sales, main = paste("Scatter of", xlab = "Advertising", ylab="Sales"))
-plot(Carseats[["Population"]], Carseats$Sales, main = paste("Scatter of", xlab = "Population", ylab="Sales"))
-par(mfrow = c(1,2))
-plot(Carseats[["Price"]], Carseats$Sales, main = paste("Scatter of", xlab = "Price", ylab="Sales"))
-plot(Carseats[["Age"]], Carseats$Sales, main = paste("Scatter of", xlab = "Age", ylab="Sales"))
-
-
-
-
-
-
-```
-We see one or two outliers in the x-direction in CompPrice and Sales but none of theme seem to be high leverage based on magnitude. The linear regression should not be too egregiously biased by these data points. 
-
-```{r}
+# Linear Model Assumption Testing
 par(mfrow = c(2, 2))
 plot(lm.fit)
+
 ```
+We can determine the fitness of applying a linear model to our data by observing the residual plots in order to test the assumptions for linear regression. In our the above visualization, we plot our residuals against the fitted values. In a residual plot for a linear model, you typically look for certain patterns or characteristics that can help assess the adequacy of the model. The spread of the residuals should remain roughly constant across the range of predicted values. The residuals should appear randomly scattered around the horizontal axis.  The residuals should be independent of each other, meaning that the value of one residual should not provide any information about the value of another residual. The residuals should not exhibit any systematic curvature or nonlinear patterns. In our case, we see that none of these conditions are violated, meaning that the data points do not seem to show any systematic deviations from randomness.   
 
-Plotting Residuals vs. Fitted Values (our y-values), the data points do not seem to show any systematic deviations from randomness. homoscedasticity holds.   
-Linear regression assumes normality. The QQ plot shows that Residuals vs the expected quantiles for a normal do not deviate too far from having a linear relationship, our normality assumption is met.
-We conclude that this linear model is appropriate although based on the scatter plots above, it seems that some covatiates are not corralated with Sales and could potentially be removed from the model. 
-
+Next we consider the Normal Q-Q plot. In a normal Q-Q plot, the residuals are plotted against the quantiles of a theoretical normal distribution. If the residuals are normally distributed, the points on the plot should roughly follow a straight line. Departures from normality can impact the accuracy of statistical tests and confidence intervals associated with the model. In our case,  our normality assumption is met, given that our residuals follow the line denoting the quantiles of a theoretical normal distribution. We conclude that fitting a linear model is indeed appropriate.
 
 
 ##### (c) Let $\beta_1$ and $\beta_2$ be the coefficients for CompPrice and Income, respectively. Test the hypothesis that $\beta_1$=$\beta_2$=0. State your hypothesis, test statistic, and test statistic’s distribution clearly. Choose an $\alpha$ you feel is appropriate.
 
 ```{r}
-lm.fit <- lm(Sales ~ CompPrice, data = Carseats)
-summary(lm.fit)
-```
+# Fit the linear model
+lm.fit <- lm(Sales ~ CompPrice + Income, data = Carseats)
 
-P-val is approximately 0.201, if we use $\alpha$=0.05, we keep the null hypothesis that $\beta_1$=0, the covariate CompPrice does not significantly effect Sales. 
+# Get the summary of the model
+summary_lm <- summary(lm.fit)
 
-```{r}
-lm.fit <- lm(Sales ~ Income, data = Carseats)
-summary(lm.fit)
+# Extract the p-values
+p_values <- summary_lm$coefficients[, "Pr(>|t|)"]
+
+# Print the p-values
+print(p_values)
+
+# Perform Bonferroni and Bonferroni-Holm Coerrection
+bonf <- p.adjust(p_values,method="bonferroni")
+bh <- p.adjust(p_values,method="BH")
+
+print(bh)
 ```
-P-val is approximately 0.002, if we use $\alpha$=0.05, we reject the null hypothesis that $\beta_1$=0, it seems that the effect of Income on Sales is statistically significant. 
+Null hypothesis: There is no linear relationship between the predictor variables and the response variable. In other words, the coefficients for both CompPrice and Income are equal to zero.
+
+Alternative hypothesis: There is a linear relationship between the predictor variables and the response variable. At least one of the coefficients for CompPrice or Income is not equal to zero.
+
+The test statistics for each coefficient are represented by their respective t-values. Meaning that our test statistic for CompPrice is 1.548, and 3.187 for Income.
+
+The distribution of the test statistics is the t-distribution, which is used in hypothesis testing for linear regression. 
+
+Since we are testing multiple hypotheses, we need to account for the family-wise error rate. We do so by applying the Bonferroni-Holm corrrection to our p-values. 
+
+Our resulting p-values are 0.1222 and 0.0023, for Carprice and Income, respectively. Comparing our adjusted p-values to 95% significance level, $\alpha$=0.05, we can conclude that we should reject our null hypothesis that both covariates are jointly equal to zero. 
+
 
 #### 2. Consider the Carseats data again.
 ##### (a) Split the data into a training set and a validation set. State the proportions of your training/validation split.
 ```{r}
-#We want to use a training set approach for cross-validation techniques to find a lambda that can best explain how many covariate to include in our model (dimension reduction)
-
+# Define Variables
 x <- model.matrix(Sales ~ ., Carseats)[, -1]
 y <- Carseats$Sales
 
+# Train/Validation Split
 set.seed(1)
-train <- sample(1:nrow(x), nrow(x) / 2)
+train <- sample(1:nrow(x), nrow(x) *0.8)
 test <- (-train)
 y.test <- y[test]
-
-
 ```
-Training set split: 1/2 of data
-Test set: 1/2
+We will train our model ou 80 percent of our data. The validation(test) set will be comprised of the remaining 20 percent of unseen data.
 
-##### (b)Fit a ridge regression model on the training data, choosing the $\lambda$ by cross-validation and reporting the final coefficients. Choose an appropriate value for K when doing cross-validation.
+##### (b)Fit a ridge regression model on the training data, choosing the "lambda" $\lambda$ by cross-validation and reporting the final coefficients. Choose an appropriate value for K when doing cross-validation.
 ```{r}
 library(glmnet)
-cv.out <- cv.glmnet(x[train, ], y[train], alpha = 0, nfolds = 5) 
-plot(cv.out)
+rr.fit <- cv.glmnet(x[train, ], y[train], alpha = 0, nfolds = 10) 
+plot(rr.fit)
 ```
 
 ```{r}
-bestLambda <- cv.out$lambda.min
+# Report best lambda
+bestLambda <- rr.fit$lambda.min
 bestLambda
 
-#The best ridge regression model has lambda corresponding to smallest MSE
+#Run ridge regression with best lambda, report coefficients
 ridge.mod <- glmnet(x, y, alpha = 0, lambda = bestLambda)
 ridge.mod$beta
 ```
 
 ##### (c) Report the RMSE using the validation set on the model from 2b.
 ```{r}
-
+# Predict values using new X's
 ridge.pred <- predict(ridge.mod, s = bestLambda, newx = x[test, ])
-#Calculating RMSE Root Mean Square Error
+
+# Calculating RMSE Root Mean Square Error
 sqrt(mean((ridge.pred - y.test)^2))
 ```
 
@@ -120,16 +126,15 @@ sqrt(mean((ridge.pred - y.test)^2))
 ##### (d) Fit a random forest model on the training data, and report the RMSE on the validation set.
 ```{r}
 #fit using training 
+library(caret)
 library(randomForest)
+set.seed(1)
 
-#set.seed(1)
-rf.carseats <- randomForest(Sales ~ ., data = Carseats, subset = train, mtry = 11/3, importance = TRUE)    #TODO Choose mrty!!!
-yhat.rf <- predict(rf.carseats, newdata = Carseats[test, ])
+rf.carseats <- randomForest(Sales ~ ., data = Carseats, subset = train, mtry = 4, importance = TRUE)  
+rf.predict <- predict(rf.carseats, newdata = Carseats[test, ])
 
 #get RMSE using test
-sqrt(mean((yhat.rf - y.test)^2))
-importance(rf.carseats)
-varImpPlot(rf.carseats)
+sqrt(mean((rf.predict - y.test)^2))
 ```
 
 ##### (e) For both of the models you fit in (b) and (d), give an example why a marketing team would prefer one model over the other.
@@ -143,11 +148,10 @@ varImpPlot(rf.carseats)
 ##### (a) Use the rt() function to generate a predictor X of length n=200. Set df=15 for X
 ```{r}
 #this does not make sense 
-set.seed(15)
+set.seed(1)
 X <-rt(n=200, df=15)
 sorted_idx = order(X)
 X = X[sorted_idx]
-#X = seq(0,100, len = 200)
 ```
 
 ##### (b) Use rt() to generate a noise vector $\epsilon$. Set df=5.
@@ -163,8 +167,6 @@ Y <- 5+2*sin(X)-(7*exp(2*cos(X))/(1+exp(2*cos(X)))) + epsilon
 
 ##### (d) Fit polynomial regression for Y on X with the order of X ranging from 1 to 5. (i.e.Y=β0+β1X+ϵ,Y=β0+β1X+β2X2+ϵ,...,Y=β0+β1X+β2X2β3X3+β4X4+β5X5+ϵ) and plot each of the five model fits, in different colors and with a legend, on top of your simulated data.
 ```{r}
-#data <- data.frame(X=X, Y=Y)
-#pts = seq(0,100, len = 200)
 plot(X,Y)
 colors <- sample(colors(),5)
 for (p in 1:5){
@@ -180,6 +182,18 @@ for (p in 1:5){
 
 
 ##### (e) Which one of these models do you prefer? Justify your answer.
+```{r}
+library(boot)
+set.seed (1)
+Auto = cbind.data.frame(X,Y)
+cv.error.5 <- rep (0, 5)
+for (i in 1:5) {
+  glm.fit <- glm(Y~poly(X,i), data = Auto)
+  cv.error.5[i] <- cv.glm (Auto , glm.fit , K = 10)$delta[1]
+}
+cv.error.5
+```
+
 
 ##### (f) For the model Y=β0+β1X+β2X2+ϵ, compute a 90% confidence interval at X=1 using least squares theory. Provide an interpretation for this interval.
 ```{r}
@@ -241,6 +255,7 @@ A negative coefficient indicates that an increase in the feature's value is asso
 
 
 ##### (c) What is the test error for the logistic regression (justify your selection of your threshold)?
+
 ##### (d) Fit an LDA to the same model, and report the test error.
 ```{r}
 #lda_fit <- lda(response ~ glucose + mass, data = pimaData,
