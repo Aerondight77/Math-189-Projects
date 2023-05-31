@@ -1,0 +1,123 @@
+---
+title: "Homework 8"
+author: "Daria Barbour-Brown | Bailey Ho | Warren Kennedy"
+date: "2023-05-28"
+output:
+  pdf_document: default
+  html_document: default
+---
+
+# Conceptual Problem 
+
+## Question 1
+
+*Explain, in your own words, how a random forest makes predictions.*
+
+A random forest uses trees as building blocks to construct more powerful prediction models. This method is an adaptation of Bagging, i.e bootstrap aggregation, where we generate multiple bootstrapped training datasets, train a model on each set, and average all the predictions to obtain our bagging estimator. Random forests provide an improvement over bagged trees by randomizing the sample of predictors that can be used for splitting trees at each split of every bagged tree. This adaption decorrelates the bagged trees from each other increasing the variation accounted for by each tree, thereby making the average of the resulting trees less variable and more reliable. Our final random forest bagging estimator will be used for prediction. 
+
+# Application Problems
+
+## Question 2
+
+*Using a linear model, predict bikers with the other variables in Bikeshare (excluding casual and registered). Make sure to use the variables in their appropriate form (i.e. numeric or factors as relevant to the context of the problem.) Perform variable selection as needed to get a strong predictive model. Use training/test splits of your choice and report a RMSE that describes your model’s performance.*
+
+```{r}
+library(ISLR2)
+library(MASS)
+data <- Bikeshare
+
+# convert Data
+data$season <- as.factor(data$season)
+data$hr <- as.numeric(data$hr)
+data$holiday <- as.factor(data$holiday)
+data$weekday <- as.factor(data$weekday)
+data$workingday <- as.factor(data$workingday)
+
+# Standardize the Data
+numeric_columns <- sapply(data, is.numeric)
+for (col in names(df)[numeric_columns]) {
+  mean_val <- mean(df[[col]])
+  sd_val <- sd(df[[col]])
+  df[[col]] <- (df[[col]] - mean_val) / sd_val
+}
+
+#Train Linear Model
+set.seed(1)
+train <- sample(nrow(data), 0.8 * nrow(data))
+train_set <- data[train, ]
+test_set <- data[-train, ]
+bikes.lm <- lm(bikers ~ . - casual - registered, data = train_set)
+summary(bikes.lm)
+lm.model <- stepAIC(bikes.lm, direction = "both")
+summary(lm.model)
+
+#Test Model
+predict_test <- predict(lm.model, newdata = test_set)
+rmse <- sqrt(mean((test_set$bikers - predict_test)^2))
+rmse
+```
+
+## Question 3
+
+*Explain your approach in 1, including how you coded variables (as numeric or factor), variable selection procedure, and training/test splits you decided to use.*
+
+In question one we first changed the data frame to ensure that our data was being interpreted correctly. This involved converting hours to numeric, and switching "holiday, weekday, workingay, and season" to factor variables with corresponding levels. The we converted variables to factor if their levels were not continuously defined. For example, season was coded with numbers, but these numbers are only defined when they are integers, so we converted the variables to make sure there were no ill-defined outcomes. Our process was to train a linear model using our training data and then perform subsset selection using both forward and backward step wise selection to decide which variables were most important. We ended up using the validation set approach to test our method, withholding 20 percent of out data in order to test our model's predictive power. 
+
+## Question 4
+
+*Using a random forest, predict bikers with the other variables in Bikeshare (excluding casual and registered). Make sure to use the variables in their appropriate form (i.e. numeric or factors as relevant to the context of the problem.) Perform model tuning to get a strong predictive model. Use training/test/validation splits of your choice and report a RMSE that describes your model’s performance.*
+```{r}
+# Train Random FOrest
+library(caret)
+library(randomForest)
+set.seed(1)
+train <- sample(nrow(data), 0.8 * nrow(data))
+train_set <- data[train, ]
+test_set <- data[-train, ]
+bikes.rf <- randomForest(bikers ~ . - casual - registered, data = train_set, mtry = 6, importance = TRUE)
+
+#Test Random Forest
+test_predict <- predict(bikes.rf, newdata = test_set)
+rmse <- sqrt(mean((test_set$bikers - test_predict)^2))
+rmse
+
+
+# Pruning/Cross Validation
+
+### Define the control parameters for cross-validation
+ctrl <- trainControl(method = "cv", number = 5, verboseIter = FALSE)  # 5-fold cross-validation
+
+### Train the random forest model using cross-validation
+model.rf2 <- train(bikers ~ . - casual - registered, data = train_set, method = "rf", trControl = ctrl)
+
+### Access the cross-validation results
+cv_results <- model.rf2$results
+cv_results
+
+#Test Random Forest
+test_predict <- predict(model.rf2, newdata = test_set)
+rmse2 <- sqrt(mean((test_set$bikers - test_predict)^2))
+rmse2
+```
+
+## Question 5
+
+*Explain your approach in 3, including how you coded variables (as numeric or factor), variable selection procedure, and training/test splits you decided to use.*
+
+For our random forest model, we retained the same data frame transformations that we had put in place in question 1. For this model, we first trained the random forest on the traing data, setting our "mtry" to 6, meaning that we restricted our split decision to subsets of 6 features for each split in each tree. We then trained another random forest using 5-fold cross validation in order to ensure better tune our model in an attempt to improve our models predictive power. In training our random forest, we used essentially the same training and test set as was used in our linear model.
+
+## Question 6
+
+*Plot variable importances of your final random forest. Compare these with the linear regression output. Does the random forest find the same variables to be important as the linear regression?*
+```{r}
+importance(bikes.rf)
+bikes.lm
+
+
+```
+```{r}
+varImpPlot(bikes.rf)
+
+
+```
+Both linear regression and random variables find the "hr" variable(s) to be important, From there on, it is tough to distinguish which variables are most influential in both models considering becuase the coeficients for the linear model tend to be clustered around similar values, and in similar fashion, the measured importance of the variables in the random forest are nearly idenitical.
