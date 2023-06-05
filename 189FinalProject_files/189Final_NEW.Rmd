@@ -149,9 +149,8 @@ sqrt(mean((rf.predict - y.test)^2))
 #### 3. In this question, you will simulate data to perform regression between X and Y.
 ##### (a) Use the rt() function to generate a predictor X of length n=200. Set df=15 for X
 ```{r}
-#this does not make sense 
 set.seed(1)
-X <-rt(n=200, df=15)
+X <- rt(n=200, df=15)
 sorted_idx = order(X)
 X = X[sorted_idx]
 ```
@@ -163,66 +162,74 @@ epsilon <- rt(n=200, df=5)
 
 ##### (c) Generate a response vector Y of length n according to: $Y=5+2sin(X)− \frac{(7*\exp(2*cos(X)}{1+\exp(2*cos(X)} +\epsilon$
 ```{r}
-Y <- 5+2*sin(X)-(7*exp(2*cos(X))/(1+exp(2*cos(X)))) + epsilon
+Y <- 5+2*sin(X)-(7*(exp(2*cos(X))/(1+exp(2*cos(X))))) + epsilon
 
 ```
 
 ##### (d) Fit polynomial regression for Y on X with the order of X ranging from 1 to 5. (i.e.Y=β0+β1X+ϵ,Y=β0+β1X+β2X2+ϵ,...,Y=β0+β1X+β2X2β3X3+β4X4+β5X5+ϵ) and plot each of the five model fits, in different colors and with a legend, on top of your simulated data.
 ```{r}
-plot(X,Y)
-colors <- sample(colors(),5)
-for (p in 1:5){
-  fit = lm(Y ~ poly(X,p))
-  val = predict(fit,data.frame(X = X))
-  
-  lines(X,val,col =colors[p],lwd= 2)
 
+plot(X, Y)
+colors <- sample(colors(), 5)
+legend_labels <- c()
+
+for (p in 1:5) {
+  fit <- lm(Y ~ poly(X, p))
+  val <- predict(fit, data.frame(X = X))
+  lines(X, val, col = colors[p], lwd = 2)
+  legend_labels <- c(legend_labels, paste0("Degree ", p))
 }
 
-
+legend("topright", legend = legend_labels, col = colors, lwd = 2)
 ```
 
 
 ##### (e) Which one of these models do you prefer? Justify your answer.
+We will perform K-fold cross validation to decide which polynomial fits our data best. We use K=10.
 ```{r}
 library(boot)
 set.seed (1)
-Auto = cbind.data.frame(X,Y)
-cv.error.5 <- rep (0, 5)
+df = cbind.data.frame(X,Y)
+predErr <- rep (0, 5)
 for (i in 1:5) {
-  glm.fit <- glm(Y~poly(X,i), data = Auto)
-  cv.error.5[i] <- cv.glm (Auto , glm.fit , K = 10)$delta[1]
+  glm.fit <- glm(Y~poly(X,i), data = df)
+  predErr[i] <- cv.glm (df , glm.fit , K = 10)$delta[1]
 }
-cv.error.5
+predErr
+min(predErr)
 ```
+Using cross validation we find that the model with the smallest validation/prediction error is the final polynomial with degree 5 which agrees with the above plot.
 
 
 ##### (f) For the model Y=β0+β1X+β2X2+ϵ, compute a 90% confidence interval at X=1 using least squares theory. Provide an interpretation for this interval.
 ```{r}
-#90% CI !!???
 fit = lm(Y ~ poly(X,2))
 ci = predict(fit, data.frame(X=1), level = 0.90, interval = "confidence")
 ci
 ```
 90% CI: [0.6640983, 1.141839]
 
+This CI says that if we were to repeat the data collection and modeling process multiple times, we would expect the true value of the response variable (when X=1) to fall within this interval in approximately 90% of the cases.
+
+
 ##### (g) For the model Y=β0+β1X+β2X2+ϵ, compute a 90% confidence interval at X=1 using a bootstrap. Provide an interpretation for this interval.
 
 ```{r}
 B=200
-beta_0 = 1:B
-beta_1 = 1:B
-beta_2 = 1:B
+
+bootstrap_predictions <- numeric(B)
 for(b in 1:B)
 {
   index = sample(1:200, replace = T)
-  
-  fit = lm(Y[index] ~ poly(X[index], 3))
-  coefficients <- coef(fit)
-  beta_0[b] = coefficients[1]
-  beta_1[b] = coefficients[2]
-  beta_2[b] = coefficients[3]
+  fit = lm(Y[index] ~ poly(X[index], 2))
+  bootstrap_predictions[b] <- predict(fit, newdata = data.frame(X = 1))
 }
+
+lower_bound <- quantile(bootstrap_predictions, 0.05)
+upper_bound <- quantile(bootstrap_predictions, 0.95)
+
+lower_bound
+upper_bound
 
 
 ```
@@ -239,7 +246,7 @@ data(College)
 set.seed(4)
 train = sample(nrow(College), nrow(College)*.8)
 train_set <- College[train, ]
-test_set <- College[-train, ]
+valid_set <- College[-train, ]
 
 ```
 
@@ -247,13 +254,15 @@ test_set <- College[-train, ]
 ```{r}
 logRegMulti <- glm(Private ~ ., data=College, family="binomial")
 summary(logRegMulti)
+exp(coefficients(logRegMulti))
 ```
 $\beta_4$ = 8.451e-03 corresponding to Top10perc
 
-A positive coefficient indicates that an increase in the feature's value is associated with a increase in the log-odds of the target variable Private. In this case, as a college leans more towards a top-10 rating, the likelihood of being a Private school increases.  
+A positive coefficient indicates that an increase in the feature's value is associated with a increase in the log-odds of the target variable Private. We take the exponential of the the coefficients to get odds of our response... In this case, as a college increases by 1 unit towards a top-10 rating, the odds of it being a Private school increases by .7%.  
 
 
 ##### (c) What is the test error for the logistic regression (justify your selection of your threshold)?
+
 
 ##### (d) Fit an LDA to the same model, and report the test error.
 ```{r}
