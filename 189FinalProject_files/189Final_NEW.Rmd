@@ -281,7 +281,7 @@ for (i in 1:num_folds) {
   
   # Predict on test data
   test_preds <- predict(logreg_model, newdata = test_data, type = "response")
-  test_class_preds <- ifelse(test_preds > 0.5, "Yes", "No")
+  test_class_preds <- ifelse(test_preds > 0.96, "Yes", "No")
   
   accuracy[i] <- mean(test_class_preds == test_data$Private)
 }
@@ -296,9 +296,22 @@ library(pROC) # ROC PLOT NEED HELP
 # Fit logistic regression model on the entire dataset
 logreg_model <- glm(Private ~ ., data = College, family = "binomial")
 
-plot.roc(College$Private, predict(logreg_model, type = "response"))
+pred_probs <- predict(logreg_model, type = "response")
+
+# Create a ROC object
+roc.info <- roc(College$Private, pred_probs, legacy.axes = TRUE)
+roc.df <- data.frame(tpp = roc.info$sensitivities*100, fpp = (1 - roc.info$specificities)*100, thresholds = roc.info$thresholds)
+
+#to find best threshold
+roc.df[roc.df$tpp > 77 & roc.df$tpp < 83, ]
+
+
+plot.roc(College$Private, predict(logreg_model, type = "response"), legacy.axes = TRUE, percent = TRUE, xlab = "False Pos Percentage", ylab = "True Pos Percentage")
+
 ######################
 ```
+The best choice of threshold depends on the goal we are trying to accomplish. Predicting whether or not a school is Private or not, is not necessarily a matter of life or death. But, if I was looking to pick a school to send my child, and bad prediction could result in higher costs perhaps. If we go by the ROC curve, we are trying to find the balance between specificity and sensitivity (false positives and true positives). Looking at the ROC curve, we filter for ttp between 77% and 83% which gives us a threshold of about .96. This results is a larger prediction error than when using .5 as a threshold but can assure us of a better balance between false positive and false negative rates. 
+
 
 ##### (d) Fit an LDA to the same model, and report the test error.
 ```{r}
