@@ -230,9 +230,8 @@ upper_bound <- quantile(bootstrap_predictions, 0.95)
 
 lower_bound
 upper_bound
-
-
 ```
+#### Need to give interpretation!!!
 ****** NEED TO PROVIDE INTERPRETATION 
 
 #### 4. Consider the College data set in the ISLR2 package.
@@ -267,10 +266,7 @@ A positive coefficient indicates that an increase in the feature's value is asso
 # Set the number of folds for cross-validation
 num_folds <- 10
 
-# Create an empty vector to store the accuracy values
 accuracy <- numeric(num_folds)
-
-# Create indices for cross-validation
 set.seed(123)  # For reproducibility
 fold_indices <- sample(rep(1:num_folds, length.out = nrow(College)))
 
@@ -287,47 +283,35 @@ for (i in 1:num_folds) {
   test_preds <- predict(logreg_model, newdata = test_data, type = "response")
   test_class_preds <- ifelse(test_preds > 0.5, "Yes", "No")
   
-  # Calculate accuracy
   accuracy[i] <- mean(test_class_preds == test_data$Private)
 }
 
-# Calculate and print the average test error
+#average test error
 test_error <- 1 - mean(accuracy)
 print(test_error)
 
+#################### need to justify selection of threshold!?
 library(pROC) # ROC PLOT NEED HELP
 
 # Fit logistic regression model on the entire dataset
 logreg_model <- glm(Private ~ ., data = College, family = "binomial")
 
 plot.roc(College$Private, predict(logreg_model, type = "response"))
-
-
-
-
-
+######################
 ```
-
-NEED TO JUSTIFY
-ACCORDING TO CHATGPT: "a threshold of 0.5 is commonly used to classify observations into the two classes, "Yes" and "No". If the predicted probability of being in the "Private" class is greater than 0.5, the observation is classified as "Private," otherwise as "Public.""
 
 ##### (d) Fit an LDA to the same model, and report the test error.
 ```{r}
 library(MASS)
-
-# Set the number of folds for cross-validation
 num_folds <- 10
 
-# Create an empty vector to store the accuracy values
 accuracy <- numeric(num_folds)
 
-# Create indices for cross-validation
-set.seed(123)  # For reproducibility
+set.seed(123) 
 fold_indices <- sample(rep(1:num_folds, length.out = nrow(College)))
 
-# Perform cross-validation
+#cross-validation
 for (i in 1:num_folds) {
-  # Split the data into training and test sets based on the fold indices
   train_data <- College[fold_indices != i, ]
   test_data <- College[fold_indices == i, ]
   
@@ -338,11 +322,9 @@ for (i in 1:num_folds) {
   test_preds <- predict(lda_model, newdata = test_data)
   test_class_preds <- test_preds$class
   
-  # Calculate accuracy
   accuracy[i] <- mean(test_class_preds == test_data$Private)
 }
 
-# Calculate and print the average test error
 test_error <- 1 - mean(accuracy)
 print(test_error)
 
@@ -352,20 +334,13 @@ print(test_error)
 ##### (e) Fit an QDA to the same model, and report the test error.
 ```{r}
 library(MASS)
-
-# Set the number of folds for cross-validation
 num_folds <- 10
-
-# Create an empty vector to store the accuracy values
 accuracy <- numeric(num_folds)
 
-# Create indices for cross-validation
-set.seed(123)  # For reproducibility
+set.seed(123) 
 fold_indices <- sample(rep(1:num_folds, length.out = nrow(College)))
 
-# Perform cross-validation
 for (i in 1:num_folds) {
-  # Split the data into training and test sets based on the fold indices
   train_data <- College[fold_indices != i, ]
   test_data <- College[fold_indices == i, ]
   
@@ -375,12 +350,10 @@ for (i in 1:num_folds) {
   # Predict on test data
   test_preds <- predict(qda_model, newdata = test_data)
   test_class_preds <- test_preds$class
-  
-  # Calculate accuracy
+
   accuracy[i] <- mean(test_class_preds == test_data$Private)
 }
 
-# Calculate and print the average test error
 test_error <- 1 - mean(accuracy)
 print(test_error)
 
@@ -390,20 +363,13 @@ print(test_error)
 ##### (f) Fit an SVM to the same model, and report the test error.
 ```{r}
 library(e1071)
-
-# Set the number of folds for cross-validation
 num_folds <- 10
-
-# Create an empty vector to store the accuracy values
 accuracy <- numeric(num_folds)
 
-# Create indices for cross-validation
-set.seed(123)  # For reproducibility
+set.seed(123) 
 fold_indices <- sample(rep(1:num_folds, length.out = nrow(College)))
 
-# Perform cross-validation
 for (i in 1:num_folds) {
-  # Split the data into training and test sets based on the fold indices
   train_data <- College[fold_indices != i, ]
   test_data <- College[fold_indices == i, ]
   
@@ -412,12 +378,9 @@ for (i in 1:num_folds) {
   
   # Predict on test data
   test_preds <- predict(svm_model, newdata = test_data)
-  
-  # Calculate accuracy
+
   accuracy[i] <- mean(test_preds == test_data$Private)
 }
-
-# Calculate and print the average test error
 test_error <- 1 - mean(accuracy)
 print(test_error)
 
@@ -425,7 +388,7 @@ print(test_error)
 
 
 ##### (g) Pick which model you think is the best and explain your choice.
-Logistic Regression has the lowest prediction error, therefor it is the best choice of model to predict whether a school is Private or not. 
+Logistic Regression has the lowest prediction error, therefor it is the best choice of model to predict whether a school is Private or not. LDA is hugely sensitive to non-gaussian data so it makes sense that this would not be a good choice. 
 
 
 #### 5. For this problem use the protein.csv file which contains protein consumption in twenty-five European countries for nine food groups. It is available in the MultBiplotR R package.
