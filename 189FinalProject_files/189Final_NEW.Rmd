@@ -9,6 +9,8 @@ output:
 # SEE PROFESSOR
 - Question 1, part C
 - Question 2, part D
+- Q 3 part E !!!
+- Validating vs Test set??
 
 
 
@@ -19,7 +21,7 @@ output:
 ##### (a) Fit a linear regression model with Sales as the response and all other variables as covariates. Report the coefficient estimates.
 
 ```{r}
-# Loading Caeseat Data
+# Loading Carseat Data
 library(ISLR2)
 data("Carseats")
 ```
@@ -147,9 +149,8 @@ sqrt(mean((rf.predict - y.test)^2))
 #### 3. In this question, you will simulate data to perform regression between X and Y.
 ##### (a) Use the rt() function to generate a predictor X of length n=200. Set df=15 for X
 ```{r}
-#this does not make sense 
 set.seed(1)
-X <-rt(n=200, df=15)
+X <- rt(n=200, df=15)
 sorted_idx = order(X)
 X = X[sorted_idx]
 ```
@@ -161,65 +162,77 @@ epsilon <- rt(n=200, df=5)
 
 ##### (c) Generate a response vector Y of length n according to: $Y=5+2sin(X)− \frac{(7*\exp(2*cos(X)}{1+\exp(2*cos(X)} +\epsilon$
 ```{r}
-Y <- 5+2*sin(X)-(7*exp(2*cos(X))/(1+exp(2*cos(X)))) + epsilon
+Y <- 5+2*sin(X)-(7*(exp(2*cos(X))/(1+exp(2*cos(X))))) + epsilon
 
 ```
 
 ##### (d) Fit polynomial regression for Y on X with the order of X ranging from 1 to 5. (i.e.Y=β0+β1X+ϵ,Y=β0+β1X+β2X2+ϵ,...,Y=β0+β1X+β2X2β3X3+β4X4+β5X5+ϵ) and plot each of the five model fits, in different colors and with a legend, on top of your simulated data.
 ```{r}
-plot(X,Y)
-colors <- sample(colors(),5)
-for (p in 1:5){
-  fit = lm(Y ~ poly(X,p))
-  val = predict(fit,data.frame(X = X))
-  
-  lines(X,val,col =colors[p],lwd= 2)
 
+plot(X, Y)
+colors <- sample(colors(), 5)
+legend_labels <- c()
+
+for (p in 1:5) {
+  fit <- lm(Y ~ poly(X, p))
+  val <- predict(fit, data.frame(X = X))
+  lines(X, val, col = colors[p], lwd = 2)
+  legend_labels <- c(legend_labels, paste0("Degree ", p))
 }
 
-
+legend("topright", legend = legend_labels, col = colors, lwd = 2)
 ```
 
 
 ##### (e) Which one of these models do you prefer? Justify your answer.
+We will perform K-fold cross validation to decide which polynomial fits our data best. We use K=10.
 ```{r}
 library(boot)
 set.seed (1)
-Auto = cbind.data.frame(X,Y)
-cv.error.5 <- rep (0, 5)
+df = cbind.data.frame(X,Y)
+predErr <- rep (0, 5)
 for (i in 1:5) {
-  glm.fit <- glm(Y~poly(X,i), data = Auto)
-  cv.error.5[i] <- cv.glm (Auto , glm.fit , K = 10)$delta[1]
+  glm.fit <- glm(Y~poly(X,i), data = df)
+  predErr[i] <- cv.glm (df , glm.fit , K = 10)$delta[1]
 }
-cv.error.5
+predErr
+min(predErr)
 ```
+Using cross validation we find that the model with the smallest validation/prediction error is the final polynomial with degree 5 which agrees with the above plot.
 
 
 ##### (f) For the model Y=β0+β1X+β2X2+ϵ, compute a 90% confidence interval at X=1 using least squares theory. Provide an interpretation for this interval.
 ```{r}
 fit = lm(Y ~ poly(X,2))
-ci = predict(fit,data.frame(X=1),interval = "confidence")
+ci = predict(fit, data.frame(X=1), level = 0.90, interval = "confidence")
 ci
 ```
+90% CI: [0.6640983, 1.141839]
+
+This CI says that if we were to repeat the data collection and modeling process multiple times, we would expect the true value of the response variable (when X=1) to fall within this interval in approximately 90% of the cases.
+
 
 ##### (g) For the model Y=β0+β1X+β2X2+ϵ, compute a 90% confidence interval at X=1 using a bootstrap. Provide an interpretation for this interval.
 
 ```{r}
-B=1
-beta_0 = 1:B
-beta_1 = 1:B
-beta_2 = 1:B
-#for(b in 1:B)
-#{
-  index = sample(1:200, replace=T)
-  index
-  fit = lm(Y[index] ~ poly(X[index], 3))
-  coefficients <- coef(fit)
-  beta_0[b] = coefficients[1]
-  beta_1[b] = coefficients[2]
-  beta_2[b] = coefficients[3]
-```
+B=200
 
+bootstrap_predictions <- numeric(B)
+for(b in 1:B)
+{
+  index = sample(1:200, replace = T)
+  fit = lm(Y[index] ~ poly(X[index], 2))
+  bootstrap_predictions[b] <- predict(fit, newdata = data.frame(X = 1))
+}
+
+lower_bound <- quantile(bootstrap_predictions, 0.05)
+upper_bound <- quantile(bootstrap_predictions, 0.95)
+
+lower_bound
+upper_bound
+```
+#### Need to give interpretation!!!
+****** NEED TO PROVIDE INTERPRETATION 
 
 #### 4. Consider the College data set in the ISLR2 package.
 ##### (a) Split the data set into a training and validation set.
@@ -229,47 +242,166 @@ data(College)
 
 
 ```{r}
-#We have one categorical feature "Private": Yes/No
-
 set.seed(4)
-train = sample(399, 399*.8)
+train = sample(nrow(College), nrow(College)*.8)
 train_set <- College[train, ]
-test_set <- College[-train, ]
+valid_set <- College[-train, ]
 
-#Create numeric col of all 1s
-#College$response <- 1
-#Transform "Private" string col to categorical 
-#College$response[College$Private == 'No'] <- 0
-
-#dfNew <- subset(College, select = -Private)
 ```
 
 ##### (b) Perform logistic regression on the training data to predict the variable Private using all other variables. Provide an interpretation of the coefficient for Top10Perc.
 ```{r}
 logRegMulti <- glm(Private ~ ., data=College, family="binomial")
 summary(logRegMulti)
+exp(coefficients(logRegMulti))
 ```
-$\beta_5$ = -7.581e-09 corresponding to Top10perc
+$\beta_4$ = 8.451e-03 corresponding to Top10perc
 
-A negative coefficient indicates that an increase in the feature's value is associated with a decrease in the log-odds of the target variable Private. In this case, as a college leans more towards a top-10 rating, the likelihood of being a Private school decreases. 
+A positive coefficient indicates that an increase in the feature's value is associated with a increase in the log-odds of the target variable Private. We take the exponential of the the coefficients to get odds of our response... In this case, as a college increases by 1 unit towards a top-10 rating, the odds of it being a Private school increases by .7%.  
 
 
 ##### (c) What is the test error for the logistic regression (justify your selection of your threshold)?
 
+```{r}
+# Set the number of folds for cross-validation
+num_folds <- 10
+
+accuracy <- numeric(num_folds)
+set.seed(123)  # For reproducibility
+fold_indices <- sample(rep(1:num_folds, length.out = nrow(College)))
+
+# Perform cross-validation
+for (i in 1:num_folds) {
+  # Split the data into training and test sets based on the fold indices
+  train_data <- College[fold_indices != i, ]
+  test_data <- College[fold_indices == i, ]
+  
+  # Fit logistic regression model on training data
+  logreg_model <- glm(Private ~ ., data = train_data, family = "binomial")
+  
+  # Predict on test data
+  test_preds <- predict(logreg_model, newdata = test_data, type = "response")
+  test_class_preds <- ifelse(test_preds > 0.96, "Yes", "No")
+  
+  accuracy[i] <- mean(test_class_preds == test_data$Private)
+}
+
+#average test error
+test_error <- 1 - mean(accuracy)
+print(test_error)
+
+#################### need to justify selection of threshold!?
+library(pROC) # ROC PLOT NEED HELP
+
+# Fit logistic regression model on the entire dataset
+logreg_model <- glm(Private ~ ., data = College, family = "binomial")
+
+pred_probs <- predict(logreg_model, type = "response")
+
+# Create a ROC object
+roc.info <- roc(College$Private, pred_probs, legacy.axes = TRUE)
+roc.df <- data.frame(tpp = roc.info$sensitivities*100, fpp = (1 - roc.info$specificities)*100, thresholds = roc.info$thresholds)
+
+#to find best threshold
+roc.df[roc.df$tpp > 77 & roc.df$tpp < 83, ]
+
+
+plot.roc(College$Private, predict(logreg_model, type = "response"), legacy.axes = TRUE, percent = TRUE, xlab = "False Pos Percentage", ylab = "True Pos Percentage")
+
+######################
+```
+The best choice of threshold depends on the goal we are trying to accomplish. Predicting whether or not a school is Private or not, is not necessarily a matter of life or death. But, if I was looking to pick a school to send my child, and bad prediction could result in higher costs perhaps. If we go by the ROC curve, we are trying to find the balance between specificity and sensitivity (false positives and true positives). Looking at the ROC curve, we filter for ttp between 77% and 83% which gives us a threshold of about .96. This results is a larger prediction error than when using .5 as a threshold but can assure us of a better balance between false positive and false negative rates. 
+
+
 ##### (d) Fit an LDA to the same model, and report the test error.
 ```{r}
-#lda_fit <- lda(response ~ glucose + mass, data = pimaData,
-    #subset = train)
-#lda_fit
+library(MASS)
+num_folds <- 10
+
+accuracy <- numeric(num_folds)
+
+set.seed(123) 
+fold_indices <- sample(rep(1:num_folds, length.out = nrow(College)))
+
+#cross-validation
+for (i in 1:num_folds) {
+  train_data <- College[fold_indices != i, ]
+  test_data <- College[fold_indices == i, ]
+  
+  # Fit LDA model on training data
+  lda_model <- lda(Private ~ ., data = train_data)
+  
+  # Predict on test data
+  test_preds <- predict(lda_model, newdata = test_data)
+  test_class_preds <- test_preds$class
+  
+  accuracy[i] <- mean(test_class_preds == test_data$Private)
+}
+
+test_error <- 1 - mean(accuracy)
+print(test_error)
+
 ```
 
 
 ##### (e) Fit an QDA to the same model, and report the test error.
+```{r}
+library(MASS)
+num_folds <- 10
+accuracy <- numeric(num_folds)
+
+set.seed(123) 
+fold_indices <- sample(rep(1:num_folds, length.out = nrow(College)))
+
+for (i in 1:num_folds) {
+  train_data <- College[fold_indices != i, ]
+  test_data <- College[fold_indices == i, ]
+  
+  # Fit QDA model on training data
+  qda_model <- qda(Private ~ ., data = train_data)
+  
+  # Predict on test data
+  test_preds <- predict(qda_model, newdata = test_data)
+  test_class_preds <- test_preds$class
+
+  accuracy[i] <- mean(test_class_preds == test_data$Private)
+}
+
+test_error <- 1 - mean(accuracy)
+print(test_error)
+
+```
+
 
 ##### (f) Fit an SVM to the same model, and report the test error.
+```{r}
+library(e1071)
+num_folds <- 10
+accuracy <- numeric(num_folds)
+
+set.seed(123) 
+fold_indices <- sample(rep(1:num_folds, length.out = nrow(College)))
+
+for (i in 1:num_folds) {
+  train_data <- College[fold_indices != i, ]
+  test_data <- College[fold_indices == i, ]
+  
+  # Fit SVM model on training data
+  svm_model <- svm(Private ~ ., data = train_data)
+  
+  # Predict on test data
+  test_preds <- predict(svm_model, newdata = test_data)
+
+  accuracy[i] <- mean(test_preds == test_data$Private)
+}
+test_error <- 1 - mean(accuracy)
+print(test_error)
+
+```
+
 
 ##### (g) Pick which model you think is the best and explain your choice.
-
+Logistic Regression has the lowest prediction error, therefor it is the best choice of model to predict whether a school is Private or not. LDA is hugely sensitive to non-gaussian data so it makes sense that this would not be a good choice. 
 
 
 #### 5. For this problem use the protein.csv file which contains protein consumption in twenty-five European countries for nine food groups. It is available in the MultBiplotR R package.
@@ -291,10 +423,21 @@ A negative coefficient indicates that an increase in the feature's value is asso
 ### Conceptual Problems
 #### 6. Explain why the bootstrap may be more beneficial for random forest than it would be for linear regression.
 
+  Random forest models can handle high-dimensional data where linear regression may suffer from overfitting or high variance in the case where number of observations is smaller than the number of features. Using a bootstrap sample in random forests helps to mitigate this issue of overfitting by creating subsets of the data during each tree's construction.
+
+******* ??? Random forest is a non-parametric algorithm capable of capturing nonlinear relationships and interactions between variables. Linear regression assumes a linear relationship between predictors and the response, which may not adequately capture complex patterns present in the data. The bootstrap sampling used in random forests allows each tree to learn different aspects of the data, enabling the model to capture nonlinearity and interactions more effectively.
+
+  In the case where our features have high correlation, linear regression models may return unreliable coefficient estimates. Random forests can overcome this correlation problem randomly subsets of predictors at each split, reducing the impact of highly correlated variables. Bootstrapping further enhances this capability by sampling from the original data set (with replacement) and thus creating diverse subsets of the data. 
+
 #### 7. Give an example of a scenario where you test multiple hypotheses but would not want to corect for FEWR or FDR.
+
+  We may want to abstain from correcting for FWER or FDR if we are in the initial stages of a data research project. At this stage of data science, we many simply be looking to identify patterns in the data and may not yet have concrete hypotheses we are interested in testing. During exploratory data analysis it is our job to test multiple hypotheses and then decide which of them we are most interested in confirming or rejecting. At this point it is not our goal to restrict error rates since doing so could also restrict our ability to fully explore the data. It does not make sense to confine hypotheses conclusions such as Type-1/2 error when we have not yet established the specific claims we wish to test. 
+
 
 #### 8. Why is it necessary to be aware of a model’s assumptions, and check those assumptions before using the trained model for inference or prediction?
 
+  Violating model assumptions can lead to biased parameter estimates and incorrect hypothesis tests and confidence intervals. When it comes to inference and prediction, validating these assumptions assures we can construct a reliable model to fit our data. The prediction accuracy of a model may suffer if it's assumptions are not met. 
+  
 
 
 
