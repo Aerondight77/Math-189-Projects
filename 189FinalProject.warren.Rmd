@@ -1,0 +1,302 @@
+---
+title: "Math189 Final Project"
+author: "Daria Barbour-Brown"
+date: "2023-05-25"
+output:
+  html_document: default
+  pdf_document: default
+---
+# SEE PROFESSOR
+- Question 1, part C
+- Question 2, part D
+
+
+
+
+
+### Application Problems
+#### 1. Consider the Carseats data in the ISLR2 package.
+##### (a) Fit a linear regression model with Sales as the response and all other variables as covariates. Report the coefficient estimates.
+
+```{r}
+# Loading Caeseat Data
+library(ISLR2)
+data("Carseats")
+```
+
+```{r}
+# Fit Linear Regression Model
+lm.fit <- lm(Sales ~ ., data = Carseats)
+
+# Report Coefficient Estimates
+summary(lm.fit)
+coefficients(lm.fit)
+
+```
+
+
+##### (b) Determine whether the linear model is appropriate.
+```{r} 
+# Linear Model Assumption Testing
+par(mfrow = c(2, 2))
+plot(lm.fit)
+
+```
+We can determine the fitness of applying a linear model to our data by observing the residual plots in order to test the assumptions for linear regression. In our the above visualization, we plot our residuals against the fitted values. In a residual plot for a linear model, you typically look for certain patterns or characteristics that can help assess the adequacy of the model. The spread of the residuals should remain roughly constant across the range of predicted values. The residuals should appear randomly scattered around the horizontal axis.  The residuals should be independent of each other, meaning that the value of one residual should not provide any information about the value of another residual. The residuals should not exhibit any systematic curvature or nonlinear patterns. In our case, we see that none of these conditions are violated, meaning that the data points do not seem to show any systematic deviations from randomness.   
+
+Next we consider the Normal Q-Q plot. In a normal Q-Q plot, the residuals are plotted against the quantiles of a theoretical normal distribution. If the residuals are normally distributed, the points on the plot should roughly follow a straight line. Departures from normality can impact the accuracy of statistical tests and confidence intervals associated with the model. In our case,  our normality assumption is met, given that our residuals follow the line denoting the quantiles of a theoretical normal distribution. We conclude that fitting a linear model is indeed appropriate.
+
+
+##### (c) Let $\beta_1$ and $\beta_2$ be the coefficients for CompPrice and Income, respectively. Test the hypothesis that $\beta_1$=$\beta_2$=0. State your hypothesis, test statistic, and test statistic’s distribution clearly. Choose an $\alpha$ you feel is appropriate.
+
+```{r}
+# Fit the linear model
+lm.fit <- lm(Sales ~ CompPrice + Income, data = Carseats)
+
+# Get the summary of the model
+summary_lm <- summary(lm.fit)
+
+# Extract the p-values
+p_values <- summary_lm$coefficients[, "Pr(>|t|)"]
+
+# Print the p-values
+print(p_values)
+
+# Perform Bonferroni and Bonferroni-Holm Coerrection
+bonf <- p.adjust(p_values,method="bonferroni")
+bh <- p.adjust(p_values,method="BH")
+
+print(bh)
+```
+Null hypothesis: There is no linear relationship between the predictor variables and the response variable. In other words, the coefficients for both CompPrice and Income are equal to zero.
+
+Alternative hypothesis: There is a linear relationship between the predictor variables and the response variable. At least one of the coefficients for CompPrice or Income is not equal to zero.
+
+The test statistics for each coefficient are represented by their respective t-values. Meaning that our test statistic for CompPrice is 1.548, and 3.187 for Income.
+
+The distribution of the test statistics is the t-distribution, which is used in hypothesis testing for linear regression. 
+
+Since we are testing multiple hypotheses, we need to account for the family-wise error rate. We do so by applying the Bonferroni-Holm corrrection to our p-values. 
+
+Our resulting p-values are 0.1222 and 0.0023, for Carprice and Income, respectively. Comparing our adjusted p-values to 95% significance level, $\alpha$=0.05, we can conclude that we should reject our null hypothesis that both covariates are jointly equal to zero. 
+
+
+#### 2. Consider the Carseats data again.
+##### (a) Split the data into a training set and a validation set. State the proportions of your training/validation split.
+```{r}
+# Define Variables
+x <- model.matrix(Sales ~ ., Carseats)[, -1]
+y <- Carseats$Sales
+
+# Train/Validation Split
+set.seed(1)
+train <- sample(1:nrow(x), nrow(x) *0.8)
+test <- (-train)
+y.test <- y[test]
+```
+We will train our model ou 80 percent of our data. The validation(test) set will be comprised of the remaining 20 percent of unseen data.
+
+##### (b)Fit a ridge regression model on the training data, choosing the "lambda" $\lambda$ by cross-validation and reporting the final coefficients. Choose an appropriate value for K when doing cross-validation.
+```{r}
+library(glmnet)
+rr.fit <- cv.glmnet(x[train, ], y[train], alpha = 0, nfolds = 10) 
+plot(rr.fit)
+```
+
+```{r}
+# Report best lambda
+bestLambda <- rr.fit$lambda.min
+bestLambda
+
+#Run ridge regression with best lambda, report coefficients
+ridge.mod <- glmnet(x, y, alpha = 0, lambda = bestLambda)
+ridge.mod$beta
+```
+
+##### (c) Report the RMSE using the validation set on the model from 2b.
+```{r}
+# Predict values using new X's
+ridge.pred <- predict(ridge.mod, s = bestLambda, newx = x[test, ])
+
+# Calculating RMSE Root Mean Square Error
+sqrt(mean((ridge.pred - y.test)^2))
+```
+
+
+##### (d) Fit a random forest model on the training data, and report the RMSE on the validation set.
+```{r}
+#fit using training 
+library(caret)
+library(randomForest)
+set.seed(1)
+
+rf.carseats <- randomForest(Sales ~ ., data = Carseats, subset = train, mtry = 4, importance = TRUE)  
+rf.predict <- predict(rf.carseats, newdata = Carseats[test, ])
+
+#get RMSE using test
+sqrt(mean((rf.predict - y.test)^2))
+```
+
+##### (e) For both of the models you fit in (b) and (d), give an example why a marketing team would prefer one model over the other.
+  A marketing team might prefer to use the Random Forest model if they are presenting to higher-ups in the company or some other "non-experts". This is because trees are quite easy to explain and mimic the natural human decision-making process. Random forests also give an easily understood estimate about which features in the model have the most significant impact on the target variable, Sales. This could be valuable for marketing teams to make data-driven decisions while providing nice illustrations to back their findings.  
+  
+  Ridge regression estimates the impact of each feature on the target variable through its coefficients. This could be valuable in marketing when it is necessary to communicate the specific influence of different variables on Sales. Ridge regression shrinks the coefficients of less important features towards zero which might be advantageous when dealing with a large number of predictors. 
+
+
+
+#### 3. In this question, you will simulate data to perform regression between X and Y.
+##### (a) Use the rt() function to generate a predictor X of length n=200. Set df=15 for X
+```{r}
+#this does not make sense 
+set.seed(1)
+X <-rt(n=200, df=15)
+sorted_idx = order(X)
+X = X[sorted_idx]
+```
+
+##### (b) Use rt() to generate a noise vector $\epsilon$. Set df=5.
+```{r}
+epsilon <- rt(n=200, df=5)
+```
+
+##### (c) Generate a response vector Y of length n according to: $Y=5+2sin(X)− \frac{(7*\exp(2*cos(X)}{1+\exp(2*cos(X)} +\epsilon$
+```{r}
+Y <- 5+2*sin(X)-(7*exp(2*cos(X))/(1+exp(2*cos(X)))) + epsilon
+
+```
+
+##### (d) Fit polynomial regression for Y on X with the order of X ranging from 1 to 5. (i.e.Y=β0+β1X+ϵ,Y=β0+β1X+β2X2+ϵ,...,Y=β0+β1X+β2X2β3X3+β4X4+β5X5+ϵ) and plot each of the five model fits, in different colors and with a legend, on top of your simulated data.
+```{r}
+plot(X,Y)
+colors <- sample(colors(),5)
+for (p in 1:5){
+  fit = lm(Y ~ poly(X,p))
+  val = predict(fit,data.frame(X = X))
+  
+  lines(X,val,col =colors[p],lwd= 2)
+
+}
+
+
+```
+
+
+##### (e) Which one of these models do you prefer? Justify your answer.
+```{r}
+library(boot)
+set.seed (1)
+Auto = cbind.data.frame(X,Y)
+cv.error.5 <- rep (0, 5)
+for (i in 1:5) {
+  glm.fit <- glm(Y~poly(X,i), data = Auto)
+  cv.error.5[i] <- cv.glm (Auto , glm.fit , K = 10)$delta[1]
+}
+cv.error.5
+```
+
+
+##### (f) For the model Y=β0+β1X+β2X2+ϵ, compute a 90% confidence interval at X=1 using least squares theory. Provide an interpretation for this interval.
+```{r}
+fit = lm(Y ~ poly(X,2))
+ci = predict(fit,data.frame(X=1),interval = "confidence")
+ci
+```
+
+##### (g) For the model Y=β0+β1X+β2X2+ϵ, compute a 90% confidence interval at X=1 using a bootstrap. Provide an interpretation for this interval.
+
+```{r}
+B=1
+beta_0 = 1:B
+beta_1 = 1:B
+beta_2 = 1:B
+#for(b in 1:B)
+#{
+  index = sample(1:200, replace=T)
+  index
+  fit = lm(Y[index] ~ poly(X[index], 3))
+  coefficients <- coef(fit)
+  beta_0[b] = coefficients[1]
+  beta_1[b] = coefficients[2]
+  beta_2[b] = coefficients[3]
+```
+
+
+#### 4. Consider the College data set in the ISLR2 package.
+##### (a) Split the data set into a training and validation set.
+```{r}
+data(College)
+```
+
+
+```{r}
+#We have one categorical feature "Private": Yes/No
+
+set.seed(4)
+train = sample(399, 399*.8)
+train_set <- College[train, ]
+test_set <- College[-train, ]
+
+#Create numeric col of all 1s
+#College$response <- 1
+#Transform "Private" string col to categorical 
+#College$response[College$Private == 'No'] <- 0
+
+#dfNew <- subset(College, select = -Private)
+```
+
+##### (b) Perform logistic regression on the training data to predict the variable Private using all other variables. Provide an interpretation of the coefficient for Top10Perc.
+```{r}
+logRegMulti <- glm(Private ~ ., data=College, family="binomial")
+summary(logRegMulti)
+```
+$\beta_5$ = -7.581e-09 corresponding to Top10perc
+
+A negative coefficient indicates that an increase in the feature's value is associated with a decrease in the log-odds of the target variable Private. In this case, as a college leans more towards a top-10 rating, the likelihood of being a Private school decreases. 
+
+
+##### (c) What is the test error for the logistic regression (justify your selection of your threshold)?
+
+##### (d) Fit an LDA to the same model, and report the test error.
+```{r}
+#lda_fit <- lda(response ~ glucose + mass, data = pimaData,
+    #subset = train)
+#lda_fit
+```
+
+
+##### (e) Fit an QDA to the same model, and report the test error.
+
+##### (f) Fit an SVM to the same model, and report the test error.
+
+##### (g) Pick which model you think is the best and explain your choice.
+
+
+
+#### 5. For this problem use the protein.csv file which contains protein consumption in twenty-five European countries for nine food groups. It is available in the MultBiplotR R package.
+##### (a) Perform principal component analysis on these data (omitting variables Comunist and Region). Report the proportion of variance and cumulative proportion of variance explained by the first 5 principal components.
+```{r}
+
+
+```
+
+
+##### (b) Provide an interpretation of the first two principal components.
+
+##### (c) Create a biplot for the first two principal components. Based on this plot, which variable(s) is Milk most correlated with? Which variable(s) is Milk most negatively correlated with? Which variables is Milk uncorrelated with?
+
+##### (d) Comment on the differences between countries in the North Region and Central Region using only the first two principal components and the respective interpretations of those principal components.
+
+
+
+### Conceptual Problems
+#### 6. Explain why the bootstrap may be more beneficial for random forest than it would be for linear regression.
+
+#### 7. Give an example of a scenario where you test multiple hypotheses but would not want to corect for FEWR or FDR.
+
+#### 8. Why is it necessary to be aware of a model’s assumptions, and check those assumptions before using the trained model for inference or prediction?
+
+
+
+
+
+
