@@ -101,7 +101,7 @@ train <- sample(1:nrow(x), nrow(x) *0.8)
 test <- (-train)
 y.test <- y[test]
 ```
-We will train our model ou 80 percent of our data. The validation(test) set will be comprised of the remaining 20 percent of unseen data.
+We will train our model on 80 percent of our data. The validation(test) set will be comprised of the remaining 20 percent of unseen data.
 
 ### Part B
 
@@ -475,18 +475,17 @@ Logistic Regression has the lowest prediction error, therefor it is the best cho
 ## Question 5
 
 *For this problem use the protein.csv file which contains protein consumption in twenty-five European countries for nine food groups. It is available in the MultBiplotR R package.*
-```{r}
-library(MultBiplotR)
-Protein.df = Protein
-```
 
 ### Part A
 
 *Perform principal component analysis on these data (omitting variables Comunist and Region). Report the proportion of variance and cumulative proportion of variance explained by the first 5 principal components.*
 ```{r}
 protein <- read.csv("protein.csv")
+# Remove Comunist column.
 protein <- protein[, -1]
+# Remove Region column.
 protein <- protein[, -1]
+# Perform PCA.
 pca <- prcomp(protein, scale = TRUE)
 ```
 
@@ -506,14 +505,14 @@ cpov
 ```{r}
 pca$rotation
 ```
-Principal Component 1 places the largest weights on Eggs, Cereal, and Nuts. This principal component basically describes the overall rates of proteins. These three features account for the most variation in the data, specifically 44.5% of the variation in the data, so they are given the larger magnitudes in the first principal component. 
+Principal Component 1 places the largest weights on Eggs, Cereal, and Nuts. This principal component basically describes a diet that is high in protein and fat (nuts and eggs) as well as carbohydrates (cereals). These three features account for the most variation in the data, specifically 44.5% of the variation in the data, so they are given the larger magnitudes in the first principal component. 
 
-Principal Component 2 places the largest weights on fish and fruits/vegetables, and less on the rest of the features. PC2
+Principal Component 2 places the largest weights on fish, fruits/vegetables, and maybe even starch, and less on the rest of the features. This principal component seems to describe a diet that's high in some natural sources of nutrients (particularly vitamins, minerals, and fiber). These three features account for about 18.2% of the variation in the data.
 
 ##### (c) Create a biplot for the first two principal components. Based on this plot, which variable(s) is Milk most correlated with? Which variable(s) is Milk most negatively correlated with? Which variables is Milk uncorrelated with?
 
-```{r fig.width=15, fig.height=15}
-biplot(pca, scale = 0, expand=1, cex=1, xlim=c(-4,4), ylim=c(-2,4))
+```{r fig.width=12, fig.height=12}
+biplot(pca, scale = 0, expand=1, cex=1, xlim=c(-3,4), ylim=c(-2,4))
 ```
 Based on this plot, `Milk` is most correlated with `White Meat`, `Red_Meat`, and `Eggs`, and is most negatively correlated with `Nuts`. `Milk` is uncorrelated with `Starch`, `Fish`, `Fruits_Vegetables`, and `Cereal`.
 
@@ -524,8 +523,9 @@ Observations corresponding to the North and Central Region:
 * North: 6, 8, 15, 20
 * Central: 2, 3, 5, 7, 9, 11, 12, 14, 16, 21, 22, 23, 24
 
-North => more meat, animal-based food (in negative PC1 and PC2 region)
-Central => 
+Looking at where the observations from the North Region are, it seems they are all in the negative portion of PC1 and are in both the negative and positive portions of PC2. The negative portion of PC1 and PC2 seems to have more meat and other animal-based proteins, thus we can say the North Region likes these protein sources. There are also two observations in the negative PC1 and positive PC2 area, and it seems to have more on starches and fishes, thus we can say the North Region also likes starch and a little of fish based proteins.
+
+Looking at where the observations from the Central Region are, it seems like a majority of them are in the negative portion of PC1 and PC2, meaning they also prefer meat and other animal-based proteins, much like the North Region. Similar to some observations of the North Region, the Central Region also contain observations in the negative PC1 and positive PC2 areas, so we could say they also like starch and fish for protein sources. One observation (16) is closer to the fruits/vegetable principal component vector, perhaps one of the difference here is they also like proteins from fruits/vegetables. The other difference is that the Central Region contains two observations in the positive PC1 and negative PC2 area, which none of the observations from the North Region are found in. This area is dominated by a single principal component vector `Cereal`, so it seems like the Central Region also prefers protein sources from cereal, albeit in smaller percentages since only two observations are found here.
 
 # Conceptual Problems
 
