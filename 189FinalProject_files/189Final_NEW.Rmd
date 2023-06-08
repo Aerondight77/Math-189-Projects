@@ -407,18 +407,50 @@ Logistic Regression has the lowest prediction error, therefor it is the best cho
 #### 5. For this problem use the protein.csv file which contains protein consumption in twenty-five European countries for nine food groups. It is available in the MultBiplotR R package.
 ##### (a) Perform principal component analysis on these data (omitting variables Comunist and Region). Report the proportion of variance and cumulative proportion of variance explained by the first 5 principal components.
 ```{r}
+protein <- read.csv("protein.csv")
+protein <- protein[, -1]
+protein <- protein[, -1]
+pca <- prcomp(protein, scale = TRUE)
+```
 
+Proportion of variance:
+```{r}
+pov <- (pca$sdev^2) / sum(pca$sdev^2)
+pov
+```
 
+Cumulative proportion of variance explained by the first 5 principal components:
+```{r}
+cpov <- cumsum(pov)[1:5]
+cpov
 ```
 
 
+
 ##### (b) Provide an interpretation of the first two principal components.
+```{r}
+pca$rotation
+```
+Principal Component 1 places the largest weights on Eggs, Cereal, and Nuts. This principal component basically describes the overall rates of proteins. These three features account for the most variation in the data, specifically 44.5% of the variation in the data, so they are given the larger magnitudes in the first principal component. 
+
+Principal Component 2 places the largest weights on fish and fruits/vegetables, and less on the rest of the features. PC2
 
 ##### (c) Create a biplot for the first two principal components. Based on this plot, which variable(s) is Milk most correlated with? Which variable(s) is Milk most negatively correlated with? Which variables is Milk uncorrelated with?
 
+```{r fig.width=15, fig.height=15}
+biplot(pca, scale = 0, expand=1, cex=1, xlim=c(-4,4), ylim=c(-2,4))
+```
+Based on this plot, `Milk` is most correlated with `White Meat`, `Red_Meat`, and `Eggs`, and is most negatively correlated with `Nuts`. `Milk` is uncorrelated with `Starch`, `Fish`, `Fruits_Vegetables`, and `Cereal`.
+
 ##### (d) Comment on the differences between countries in the North Region and Central Region using only the first two principal components and the respective interpretations of those principal components.
 
+Observations corresponding to the North and Central Region:
 
+* North: 6, 8, 15, 20
+* Central: 2, 3, 5, 7, 9, 11, 12, 14, 16, 21, 22, 23, 24
+
+North => more meat, animal-based food (in negative PC1 and PC2 region)
+Central => 
 
 ### Conceptual Problems
 #### 6. Explain why the bootstrap may be more beneficial for random forest than it would be for linear regression.
