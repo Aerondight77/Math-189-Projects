@@ -10,15 +10,19 @@ output:
 - Question 1, part C
 - Question 2, part D
 - Q 3 part E !!!
-- Validating vs Test set??
+- Question 3, part G
 
 
+# Application Problems
 
 
+## Question 1 
 
-### Application Problems
-#### 1. Consider the Carseats data in the ISLR2 package.
-##### (a) Fit a linear regression model with Sales as the response and all other variables as covariates. Report the coefficient estimates.
+*Consider the Carseats data in the ISLR2 package.*
+
+### Part A
+
+*Fit a linear regression model with Sales as the response and all other variables as covariates. Report the coefficient estimates.*
 
 ```{r}
 # Loading Carseat Data
@@ -37,7 +41,10 @@ coefficients(lm.fit)
 ```
 
 
-##### (b) Determine whether the linear model is appropriate.
+### Part B 
+
+*Determine whether the linear model is appropriate.*
+
 ```{r} 
 # Linear Model Assumption Testing
 par(mfrow = c(2, 2))
@@ -49,26 +56,19 @@ We can determine the fitness of applying a linear model to our data by observing
 Next we consider the Normal Q-Q plot. In a normal Q-Q plot, the residuals are plotted against the quantiles of a theoretical normal distribution. If the residuals are normally distributed, the points on the plot should roughly follow a straight line. Departures from normality can impact the accuracy of statistical tests and confidence intervals associated with the model. In our case,  our normality assumption is met, given that our residuals follow the line denoting the quantiles of a theoretical normal distribution. We conclude that fitting a linear model is indeed appropriate.
 
 
-##### (c) Let $\beta_1$ and $\beta_2$ be the coefficients for CompPrice and Income, respectively. Test the hypothesis that $\beta_1$=$\beta_2$=0. State your hypothesis, test statistic, and test statistic’s distribution clearly. Choose an $\alpha$ you feel is appropriate.
+### Part C 
+
+Let $\beta_1$ and $\beta_2$ be the coefficients for CompPrice and Income, respectively. Test the hypothesis that $\beta_1$=$\beta_2$=0. State your hypothesis, test statistic, and test statistic’s distribution clearly. Choose an $\alpha$ you feel is appropriate.
 
 ```{r}
-# Fit the linear model
-lm.fit <- lm(Sales ~ CompPrice + Income, data = Carseats)
+### ANOVA METHOD
 
-# Get the summary of the model
-summary_lm <- summary(lm.fit)
+library(dplyr)
+data.subset = Carseats[, -c(2,3)]
+lmfit1 = lm(Sales~., data=data.subset)
+lmfit2 = lm(Sales~., data=Carseats)
+anova(lmfit1,lmfit2)
 
-# Extract the p-values
-p_values <- summary_lm$coefficients[, "Pr(>|t|)"]
-
-# Print the p-values
-print(p_values)
-
-# Perform Bonferroni and Bonferroni-Holm Coerrection
-bonf <- p.adjust(p_values,method="bonferroni")
-bh <- p.adjust(p_values,method="BH")
-
-print(bh)
 ```
 Null hypothesis: There is no linear relationship between the predictor variables and the response variable. In other words, the coefficients for both CompPrice and Income are equal to zero.
 
@@ -83,8 +83,13 @@ Since we are testing multiple hypotheses, we need to account for the family-wise
 Our resulting p-values are 0.1222 and 0.0023, for Carprice and Income, respectively. Comparing our adjusted p-values to 95% significance level, $\alpha$=0.05, we can conclude that we should reject our null hypothesis that both covariates are jointly equal to zero. 
 
 
-#### 2. Consider the Carseats data again.
-##### (a) Split the data into a training set and a validation set. State the proportions of your training/validation split.
+## Question 2
+*Consider the Carseats data again.*
+
+### Part A
+
+*Split the data into a training set and a validation set. State the proportions of your training/validation split.*
+
 ```{r}
 # Define Variables
 x <- model.matrix(Sales ~ ., Carseats)[, -1]
@@ -98,11 +103,14 @@ y.test <- y[test]
 ```
 We will train our model ou 80 percent of our data. The validation(test) set will be comprised of the remaining 20 percent of unseen data.
 
-##### (b)Fit a ridge regression model on the training data, choosing the "lambda" $\lambda$ by cross-validation and reporting the final coefficients. Choose an appropriate value for K when doing cross-validation.
+### Part B
+
+*Fit a ridge regression model on the training data, choosing the "lambda" $\lambda$ by cross-validation and reporting the final coefficients. Choose an appropriate value for K when doing cross-validation.*
+
 ```{r}
 library(glmnet)
 rr.fit <- cv.glmnet(x[train, ], y[train], alpha = 0, nfolds = 10) 
-plot(rr.fit)
+
 ```
 
 ```{r}
@@ -112,10 +120,12 @@ bestLambda
 
 #Run ridge regression with best lambda, report coefficients
 ridge.mod <- glmnet(x, y, alpha = 0, lambda = bestLambda)
-ridge.mod$beta
+coef(ridge.mod)
 ```
 
-##### (c) Report the RMSE using the validation set on the model from 2b.
+### Part C
+*Report the RMSE using the validation set on the model from 2b.*
+
 ```{r}
 # Predict values using new X's
 ridge.pred <- predict(ridge.mod, s = bestLambda, newx = x[test, ])
@@ -125,7 +135,10 @@ sqrt(mean((ridge.pred - y.test)^2))
 ```
 
 
-##### (d) Fit a random forest model on the training data, and report the RMSE on the validation set.
+### Part D 
+
+*Fit a random forest model on the training data, and report the RMSE on the validation set.*
+
 ```{r}
 #fit using training 
 library(caret)
@@ -139,15 +152,20 @@ rf.predict <- predict(rf.carseats, newdata = Carseats[test, ])
 sqrt(mean((rf.predict - y.test)^2))
 ```
 
-##### (e) For both of the models you fit in (b) and (d), give an example why a marketing team would prefer one model over the other.
-  A marketing team might prefer to use the Random Forest model if they are presenting to higher-ups in the company or some other "non-experts". This is because trees are quite easy to explain and mimic the natural human decision-making process. Random forests also give an easily understood estimate about which features in the model have the most significant impact on the target variable, Sales. This could be valuable for marketing teams to make data-driven decisions while providing nice illustrations to back their findings.  
+### Part E
+
+*For both of the models you fit in (b) and (d), give an example why a marketing team would prefer one model over the other.*
+
+Suppose a marketing team seeks a model that balances accurate predictions with interpretability. Ridge regression meets their requirements by providing interpretable coefficient estimates, allowing them to assess the impact of predictors on customer satisfaction. This aids in identifying influential variables and making informed decisions. Additionally, ridge regression is a straightforward and transparent linear model, simplifying communication with stakeholders. Moreover, in our case, the ridge regression model performs better, exhibiting the lowest root mean square error compared to our random forest model. Hence, based on its simplicity and accuracy, we believe the marketing team is likely to prefer the ridge regression model.
   
-  Ridge regression estimates the impact of each feature on the target variable through its coefficients. This could be valuable in marketing when it is necessary to communicate the specific influence of different variables on Sales. Ridge regression shrinks the coefficients of less important features towards zero which might be advantageous when dealing with a large number of predictors. 
+## Question 3
 
+*In this question, you will simulate data to perform regression between X and Y.*
 
+### Part A
 
-#### 3. In this question, you will simulate data to perform regression between X and Y.
-##### (a) Use the rt() function to generate a predictor X of length n=200. Set df=15 for X
+*Use the rt() function to generate a predictor X of length n=200. Set df=15 for X*
+
 ```{r}
 set.seed(1)
 X <- rt(n=200, df=15)
@@ -155,18 +173,27 @@ sorted_idx = order(X)
 X = X[sorted_idx]
 ```
 
-##### (b) Use rt() to generate a noise vector $\epsilon$. Set df=5.
+### Part B
+
+*Use rt() to generate a noise vector $\epsilon$. Set df=5.*
+
 ```{r}
 epsilon <- rt(n=200, df=5)
 ```
 
-##### (c) Generate a response vector Y of length n according to: $Y=5+2sin(X)− \frac{(7*\exp(2*cos(X)}{1+\exp(2*cos(X)} +\epsilon$
+### Part C 
+
+*Generate a response vector Y of length n according to: $Y=5+2sin(X)− \frac{(7*\exp(2*cos(X)}{1+\exp(2*cos(X)} +\epsilon$*
+
 ```{r}
 Y <- 5+2*sin(X)-(7*(exp(2*cos(X))/(1+exp(2*cos(X))))) + epsilon
 
 ```
 
-##### (d) Fit polynomial regression for Y on X with the order of X ranging from 1 to 5. (i.e.Y=β0+β1X+ϵ,Y=β0+β1X+β2X2+ϵ,...,Y=β0+β1X+β2X2β3X3+β4X4+β5X5+ϵ) and plot each of the five model fits, in different colors and with a legend, on top of your simulated data.
+### Part D
+
+*Fit polynomial regression for Y on X with the order of X ranging from 1 to 5. (i.e.Y=β0+β1X+ϵ,Y=β0+β1X+β2X2+ϵ,...,Y=β0+β1X+β2X2β3X3+β4X4+β5X5+ϵ) and plot each of the five model fits, in different colors and with a legend, on top of your simulated data.*
+
 ```{r}
 
 plot(X, Y)
@@ -184,7 +211,10 @@ legend("topright", legend = legend_labels, col = colors, lwd = 2)
 ```
 
 
-##### (e) Which one of these models do you prefer? Justify your answer.
+### Part E
+
+*Which one of these models do you prefer? Justify your answer.*
+
 We will perform K-fold cross validation to decide which polynomial fits our data best. We use K=10.
 ```{r}
 library(boot)
@@ -201,7 +231,10 @@ min(predErr)
 Using cross validation we find that the model with the smallest validation/prediction error is the final polynomial with degree 5 which agrees with the above plot.
 
 
-##### (f) For the model Y=β0+β1X+β2X2+ϵ, compute a 90% confidence interval at X=1 using least squares theory. Provide an interpretation for this interval.
+### Part F
+
+*For the model Y=β0+β1X+β2X2+ϵ, compute a 90% confidence interval at X=1 using least squares theory. Provide an interpretation for this interval.*
+
 ```{r}
 fit = lm(Y ~ poly(X,2))
 ci = predict(fit, data.frame(X=1), level = 0.90, interval = "confidence")
@@ -212,30 +245,48 @@ ci
 This CI says that if we were to repeat the data collection and modeling process multiple times, we would expect the true value of the response variable (when X=1) to fall within this interval in approximately 90% of the cases.
 
 
-##### (g) For the model Y=β0+β1X+β2X2+ϵ, compute a 90% confidence interval at X=1 using a bootstrap. Provide an interpretation for this interval.
+### Part G
 
-```{r}
-B=200
+*For the model Y=β0+β1X+β2X2+ϵ, compute a 90% confidence interval at X=1 using a bootstrap. Provide an interpretation for this interval.*
 
-bootstrap_predictions <- numeric(B)
-for(b in 1:B)
-{
-  index = sample(1:200, replace = T)
-  fit = lm(Y[index] ~ poly(X[index], 2))
-  bootstrap_predictions[b] <- predict(fit, newdata = data.frame(X = 1))
+```{r, warning=FALSE}
+
+df=data.frame(Y=Y,X=X)
+
+# Set the number of bootstrap samples
+B <- 200
+
+# Vector to store bootstrap estimates
+bootstrap_estimates <- numeric(B)  
+
+#Bootstrp Procedure
+
+for (b in 1:B) {
+  # Sample with replacement from the original dataset
+  bootstrap_data <- df[sample(nrow(df), replace = TRUE), ]
+  
+  # Fit the model on the bootstrap sample
+  fit <- lm(Y ~ poly(X, 2), data = bootstrap_data)
+  
+  # Predict the response at X = 1
+  bootstrap_estimates[b] <- predict(fit, newdata = data.frame(X = 1))
 }
 
-lower_bound <- quantile(bootstrap_predictions, 0.05)
-upper_bound <- quantile(bootstrap_predictions, 0.95)
+confidence_interval <- quantile(bootstrap_estimates, c(0.05, 0.95))
+confidence_interval
 
-lower_bound
-upper_bound
 ```
-#### Need to give interpretation!!!
-****** NEED TO PROVIDE INTERPRETATION 
 
-#### 4. Consider the College data set in the ISLR2 package.
-##### (a) Split the data set into a training and validation set.
+The confidence interval is a range of values that gives us an idea of where the model's prediction at X = 1 is likely to fall. It takes into account the variability in the data and the estimation process using bootstrapping. If we were to repeat the bootstrapping procedure multiple times, around 90% of the confidence intervals calculated would include the true value of the model's prediction at X = 1. The lower bound of the interval represents the estimated minimum value, while the upper bound represents the estimated maximum value. In simpler terms, the confidence interval provides a range within which we can reasonably expect the model's prediction at X = 1 to lie.
+
+## Question 4 
+
+*Consider the College data set in the ISLR2 package.*
+
+### Part A
+
+*Split the data set into a training and validation set.*
+
 ```{r}
 data(College)
 ```
@@ -249,7 +300,10 @@ valid_set <- College[-train, ]
 
 ```
 
-##### (b) Perform logistic regression on the training data to predict the variable Private using all other variables. Provide an interpretation of the coefficient for Top10Perc.
+### Part B
+
+*Perform logistic regression on the training data to predict the variable Private using all other variables. Provide an interpretation of the coefficient for Top10Perc.*
+
 ```{r}
 logRegMulti <- glm(Private ~ ., data=College, family="binomial")
 summary(logRegMulti)
@@ -257,10 +311,11 @@ exp(coefficients(logRegMulti))
 ```
 $\beta_4$ = 8.451e-03 corresponding to Top10perc
 
-A positive coefficient indicates that an increase in the feature's value is associated with a increase in the log-odds of the target variable Private. We take the exponential of the the coefficients to get odds of our response... In this case, as a college increases by 1 unit towards a top-10 rating, the odds of it being a Private school increases by .7%.  
+The coefficient for the variable Top10perc indicates that a one-unit increase in Top10perc is associated with an expected increase of approximately 0.008451 in the log-odds of the outcome variable. However, it's important to note that this estimate does not reach statistical significance, suggesting that the observed relationship between Top10perc and the outcome variable may not be meaningful or distinguishable from random variation. 
 
+### Part C
 
-##### (c) What is the test error for the logistic regression (justify your selection of your threshold)?
+*What is the test error for the logistic regression (justify your selection of your threshold)?*
 
 ```{r}
 # Set the number of folds for cross-validation
@@ -281,7 +336,7 @@ for (i in 1:num_folds) {
   
   # Predict on test data
   test_preds <- predict(logreg_model, newdata = test_data, type = "response")
-  test_class_preds <- ifelse(test_preds > 0.96, "Yes", "No")
+  test_class_preds <- ifelse(test_preds > 0.65, "Yes", "No")
   
   accuracy[i] <- mean(test_class_preds == test_data$Private)
 }
@@ -290,30 +345,34 @@ for (i in 1:num_folds) {
 test_error <- 1 - mean(accuracy)
 print(test_error)
 
-#################### need to justify selection of threshold!?
-library(pROC) # ROC PLOT NEED HELP
+library(pROC) 
 
 # Fit logistic regression model on the entire dataset
 logreg_model <- glm(Private ~ ., data = College, family = "binomial")
-
 pred_probs <- predict(logreg_model, type = "response")
 
 # Create a ROC object
 roc.info <- roc(College$Private, pred_probs, legacy.axes = TRUE)
 roc.df <- data.frame(tpp = roc.info$sensitivities*100, fpp = (1 - roc.info$specificities)*100, thresholds = roc.info$thresholds)
 
-#to find best threshold
-roc.df[roc.df$tpp > 77 & roc.df$tpp < 83, ]
+# Get the coordinates of the point with the highest AUC
+best_coords <- coords(roc.info, "best")
 
+# Extract the best threshold and corresponding AUC
+best_threshold <- best_coords$threshold
+best_threshold
 
 plot.roc(College$Private, predict(logreg_model, type = "response"), legacy.axes = TRUE, percent = TRUE, xlab = "False Pos Percentage", ylab = "True Pos Percentage")
 
 ######################
 ```
-The best choice of threshold depends on the goal we are trying to accomplish. Predicting whether or not a school is Private or not, is not necessarily a matter of life or death. But, if I was looking to pick a school to send my child, and bad prediction could result in higher costs perhaps. If we go by the ROC curve, we are trying to find the balance between specificity and sensitivity (false positives and true positives). Looking at the ROC curve, we filter for ttp between 77% and 83% which gives us a threshold of about .96. This results is a larger prediction error than when using .5 as a threshold but can assure us of a better balance between false positive and false negative rates. 
 
+We ended up choosing **.65** as our threshold by selecting the threshold corresponding to the best sum of sensitivity + specificity respectively.
 
-##### (d) Fit an LDA to the same model, and report the test error.
+### Part D
+
+*Fit an LDA to the same model, and report the test error.*
+
 ```{r}
 library(MASS)
 num_folds <- 10
@@ -344,7 +403,10 @@ print(test_error)
 ```
 
 
-##### (e) Fit an QDA to the same model, and report the test error.
+### Part E
+
+*Fit an QDA to the same model, and report the test error.*
+
 ```{r}
 library(MASS)
 num_folds <- 10
@@ -373,7 +435,10 @@ print(test_error)
 ```
 
 
-##### (f) Fit an SVM to the same model, and report the test error.
+### Part F
+
+*Fit an SVM to the same model, and report the test error.*
+
 ```{r}
 library(e1071)
 num_folds <- 10
@@ -400,28 +465,49 @@ print(test_error)
 ```
 
 
-##### (g) Pick which model you think is the best and explain your choice.
+### Part G
+
+*Pick which model you think is the best and explain your choice.*
+
 Logistic Regression has the lowest prediction error, therefor it is the best choice of model to predict whether a school is Private or not. LDA is hugely sensitive to non-gaussian data so it makes sense that this would not be a good choice. 
 
 
-#### 5. For this problem use the protein.csv file which contains protein consumption in twenty-five European countries for nine food groups. It is available in the MultBiplotR R package.
-##### (a) Perform principal component analysis on these data (omitting variables Comunist and Region). Report the proportion of variance and cumulative proportion of variance explained by the first 5 principal components.
+## Question 5
+
+*For this problem use the protein.csv file which contains protein consumption in twenty-five European countries for nine food groups. It is available in the MultBiplotR R package.*
+```{r}
+library(MultBiplotR)
+Protein.df = Protein
+```
+
+### Part A
+
+*Perform principal component analysis on these data (omitting variables Comunist and Region). Report the proportion of variance and cumulative proportion of variance explained by the first 5 principal components.*
 ```{r}
 
 
 ```
 
 
-##### (b) Provide an interpretation of the first two principal components.
+### Part B
 
-##### (c) Create a biplot for the first two principal components. Based on this plot, which variable(s) is Milk most correlated with? Which variable(s) is Milk most negatively correlated with? Which variables is Milk uncorrelated with?
+*Provide an interpretation of the first two principal components.*
 
-##### (d) Comment on the differences between countries in the North Region and Central Region using only the first two principal components and the respective interpretations of those principal components.
+### Part C
+
+*Create a biplot for the first two principal components. Based on this plot, which variable(s) is Milk most correlated with? Which variable(s) is Milk most negatively correlated with? Which variables is Milk uncorrelated with?*
+
+### Part D
+
+*Comment on the differences between countries in the North Region and Central Region using only the first two principal components and the respective interpretations of those principal components.*
 
 
 
-### Conceptual Problems
-#### 6. Explain why the bootstrap may be more beneficial for random forest than it would be for linear regression.
+# Conceptual Problems
+
+## Question 6
+
+*Explain why the bootstrap may be more beneficial for random forest than it would be for linear regression.*
 
   Random forest models can handle high-dimensional data where linear regression may suffer from overfitting or high variance in the case where number of observations is smaller than the number of features. Using a bootstrap sample in random forests helps to mitigate this issue of overfitting by creating subsets of the data during each tree's construction.
 
@@ -429,12 +515,17 @@ Logistic Regression has the lowest prediction error, therefor it is the best cho
 
   In the case where our features have high correlation, linear regression models may return unreliable coefficient estimates. Random forests can overcome this correlation problem randomly subsets of predictors at each split, reducing the impact of highly correlated variables. Bootstrapping further enhances this capability by sampling from the original data set (with replacement) and thus creating diverse subsets of the data. 
 
-#### 7. Give an example of a scenario where you test multiple hypotheses but would not want to corect for FEWR or FDR.
+
+## Question 7
+
+*Give an example of a scenario where you test multiple hypotheses but would not want to corect for FEWR or FDR.*
 
   We may want to abstain from correcting for FWER or FDR if we are in the initial stages of a data research project. At this stage of data science, we many simply be looking to identify patterns in the data and may not yet have concrete hypotheses we are interested in testing. During exploratory data analysis it is our job to test multiple hypotheses and then decide which of them we are most interested in confirming or rejecting. At this point it is not our goal to restrict error rates since doing so could also restrict our ability to fully explore the data. It does not make sense to confine hypotheses conclusions such as Type-1/2 error when we have not yet established the specific claims we wish to test. 
 
 
-#### 8. Why is it necessary to be aware of a model’s assumptions, and check those assumptions before using the trained model for inference or prediction?
+## Question 8
+
+*Why is it necessary to be aware of a model’s assumptions, and check those assumptions before using the trained model for inference or prediction?*
 
   Violating model assumptions can lead to biased parameter estimates and incorrect hypothesis tests and confidence intervals. When it comes to inference and prediction, validating these assumptions assures we can construct a reliable model to fit our data. The prediction accuracy of a model may suffer if it's assumptions are not met. 
   
