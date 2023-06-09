@@ -1,7 +1,5 @@
 ---
 title: 'Homework 4: Hypothesis Testing'
-author: "|Daria Barbour-Brown\n|Bailey Ho\n|Warren Kennedy\n"
-date: 'Last Updated: `r format(Sys.time(), ''%B %d, %Y'')`'
 output: pdf_document
 ---
 
