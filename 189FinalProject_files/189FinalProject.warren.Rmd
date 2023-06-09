@@ -180,7 +180,7 @@ epsilon <- rt(n=200, df=5)
 
 ### Part C 
 
-*Generate a response vector Y of length n*
+*Generate a response vector Y of length n according to: Y=5+2sin(X)− \frac{(7*\exp(2*cos(X)}{1+\exp(2*cos(X)} +\epsilon*
 
 ```{r}
 Y <- 5+2*sin(X)-(7*(exp(2*cos(X))/(1+exp(2*cos(X))))) + epsilon
@@ -189,7 +189,7 @@ Y <- 5+2*sin(X)-(7*(exp(2*cos(X))/(1+exp(2*cos(X))))) + epsilon
 
 ### Part D
 
-*Fit polynomial regression for Y on X with the order of X ranging from 1 to 5 and plot each of the five model fits, in different colors and with a legend, on top of your simulated data.*
+*Fit polynomial regression for Y on X with the order of X ranging from 1 to 5. (i.e.Y=β0+β1X+ϵ,Y=β0+β1X+β2X2+ϵ,...,Y=β0+β1X+β2X2β3X3+β4X4+β5X5+ϵ) and plot each of the five model fits, in different colors and with a legend, on top of your simulated data.*
 
 ```{r}
 
@@ -211,7 +211,6 @@ legend("topright", legend = legend_labels, col = colors, lwd = 2)
 ### Part E
 
 *Which one of these models do you prefer? Justify your answer.*
-
 We utilize 10-fold cross validation to determine the most suitable polynomial for our data. Through this process, we identify that the polynomial with degree 5 yields the smallest validation/prediction error. The corresponding visualization of this final polynomial can be observed in the plot below.
 ```{r}
 library(boot)
@@ -230,7 +229,7 @@ min(predErr)
 
 ### Part F
 
-*For the model, compute a 90% confidence interval at X=1 using least squares theory. Provide an interpretation for this interval.*
+*For the model Y=β0+β1X+β2X2+ϵ, compute a 90% confidence interval at X=1 using least squares theory. Provide an interpretation for this interval.*
 
 ```{r}
 fit = lm(Y ~ poly(X,2))
@@ -244,7 +243,7 @@ Our Confidence Interval indicates that in around 90% of cases, the true value of
 
 ### Part G
 
-*For the model, compute a 90% confidence interval at X=1 using a bootstrap. Provide an interpretation for this interval.*
+*For the model Y=β0+β1X+β2X2+ϵ, compute a 90% confidence interval at X=1 using a bootstrap. Provide an interpretation for this interval.*
 
 ```{r, warning=FALSE}
 
@@ -475,7 +474,7 @@ Among the models considered, Logistic Regression demonstrates the lowest predict
 
 *Perform principal component analysis on these data (omitting variables Comunist and Region). Report the proportion of variance and cumulative proportion of variance explained by the first 5 principal components.*
 ```{r}
-protein <- read.csv("C:/Users/oklah/OneDrive/Spring23/Math 189/protein.csv")
+protein <- read.csv("protein.csv")
 # Remove Comunist column.
 protein <- protein[, -1]
 # Remove Region column.

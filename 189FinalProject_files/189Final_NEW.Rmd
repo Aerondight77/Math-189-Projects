@@ -3,8 +3,8 @@ title: "Math189 Final Project"
 author: "Daria Barbour-Brown"
 date: "2023-05-25"
 output:
-  html_document: default
   pdf_document: default
+  html_document: default
 ---
 # Application Problems
 
@@ -51,7 +51,7 @@ Next we consider the Normal Q-Q plot. In a normal Q-Q plot, the residuals are pl
 
 ### Part C 
 
-*Let $\beta_1$ and $\beta_2$ be the coefficients for CompPrice and Income, respectively. Test the hypothesis that $\beta_1$=$\beta_2$=0. State your hypothesis, test statistic, and test statistic’s distribution clearly. Choose an $\alpha$ you feel is appropriate.*
+*Let beta-1 and beta-2 be the coefficients for CompPrice and Income, respectively. Test the hypothesis that beta-1 = beta-2 = 0. State your hypothesis, test statistic, and test statistic’s distribution clearly. Choose an alpha you feel is appropriate.*
 
 ```{r}
 ### ANOVA METHOD
@@ -99,7 +99,7 @@ We will train our model on 80 percent of our data. The validation(test) set will
 
 ### Part B
 
-*Fit a ridge regression model on the training data, choosing the "lambda" $\lambda$ by cross-validation and reporting the final coefficients. Choose an appropriate value for K when doing cross-validation.*
+*Fit a ridge regression model on the training data, choosing the lambda by cross-validation and reporting the final coefficients. Choose an appropriate value for K when doing cross-validation.*
 
 ```{r}
 library(glmnet)
@@ -170,7 +170,7 @@ X = X[sorted_idx]
 
 ### Part B
 
-*Use rt() to generate a noise vector $\epsilon$. Set df=5.*
+*Use rt() to generate a noise vector epsilon. Set df=5.*
 
 ```{r}
 epsilon <- rt(n=200, df=5)
@@ -178,7 +178,7 @@ epsilon <- rt(n=200, df=5)
 
 ### Part C 
 
-*Generate a response vector Y of length n according to: $Y=5+2sin(X)− \frac{(7*\exp(2*cos(X)}{1+\exp(2*cos(X)} +\epsilon$*
+*Generate a response vector Y of length n according to: Y=5+2sin(X)− \frac{(7*\exp(2*cos(X)}{1+\exp(2*cos(X)} +\epsilon*
 
 ```{r}
 Y <- 5+2*sin(X)-(7*(exp(2*cos(X))/(1+exp(2*cos(X))))) + epsilon
@@ -493,7 +493,9 @@ cpov <- cumsum(pov)[1:5]
 cpov
 ```
 
-##### (b) Provide an interpretation of the first two principal components.
+### Part B 
+
+*Provide an interpretation of the first two principal components.*
 ```{r}
 pca$rotation
 ```
@@ -503,14 +505,18 @@ Moving on to Principal Component 2, it assigns considerable weights to fish, fru
 
 In summary, Principal Component 1 captures a diet with a high protein, fat, and carbohydrate content, while Principal Component 2 represents a diet that prioritizes natural nutrient sources like fish, fruits/vegetables, and potentially starch. These components account for a substantial proportion of the overall data variation, further emphasizing their relevance in understanding dietary patterns.
 
-##### (c) Create a biplot for the first two principal components. Based on this plot, which variable(s) is Milk most correlated with? Which variable(s) is Milk most negatively correlated with? Which variables is Milk uncorrelated with?
+### Part C
+
+*Create a biplot for the first two principal components. Based on this plot, which variable(s) is Milk most correlated with? Which variable(s) is Milk most negatively correlated with? Which variables is Milk uncorrelated with?*
 
 ```{r fig.width=12, fig.height=12}
 biplot(pca, scale = 0, expand=1, cex=1, xlim=c(-3,4), ylim=c(-2,4))
 ```
 Based on this plot, `Milk` is most correlated with `White Meat`, `Red_Meat`, and `Eggs`, and is most negatively correlated with `Nuts`. `Milk` is uncorrelated with `Starch`, `Fish`, `Fruits_Vegetables`, and `Cereal`.
 
-##### (d) Comment on the differences between countries in the North Region and Central Region using only the first two principal components and the respective interpretations of those principal components.
+### Part D 
+
+*Comment on the differences between countries in the North Region and Central Region using only the first two principal components and the respective interpretations of those principal components.*
 
 Observations corresponding to the North and Central Region:
 
