@@ -6,13 +6,6 @@ output:
   html_document: default
   pdf_document: default
 ---
-# SEE PROFESSOR
-- Question 1, part C
-- Question 2, part D
-- Q 3 part E !!!
-- Question 3, part G
-
-
 # Application Problems
 
 
@@ -58,7 +51,7 @@ Next we consider the Normal Q-Q plot. In a normal Q-Q plot, the residuals are pl
 
 ### Part C 
 
-Let $\beta_1$ and $\beta_2$ be the coefficients for CompPrice and Income, respectively. Test the hypothesis that $\beta_1$=$\beta_2$=0. State your hypothesis, test statistic, and test statistic’s distribution clearly. Choose an $\alpha$ you feel is appropriate.
+*Let $\beta_1$ and $\beta_2$ be the coefficients for CompPrice and Income, respectively. Test the hypothesis that $\beta_1$=$\beta_2$=0. State your hypothesis, test statistic, and test statistic’s distribution clearly. Choose an $\alpha$ you feel is appropriate.*
 
 ```{r}
 ### ANOVA METHOD
@@ -84,6 +77,7 @@ Our resulting p-values are 0.1222 and 0.0023, for Carprice and Income, respectiv
 
 
 ## Question 2
+
 *Consider the Carseats data again.*
 
 ### Part A
@@ -124,6 +118,7 @@ coef(ridge.mod)
 ```
 
 ### Part C
+
 *Report the RMSE using the validation set on the model from 2b.*
 
 ```{r}
@@ -214,8 +209,7 @@ legend("topright", legend = legend_labels, col = colors, lwd = 2)
 ### Part E
 
 *Which one of these models do you prefer? Justify your answer.*
-
-We will perform K-fold cross validation to decide which polynomial fits our data best. We use K=10.
+We utilize 10-fold cross validation to determine the most suitable polynomial for our data. Through this process, we identify that the polynomial with degree 5 yields the smallest validation/prediction error. The corresponding visualization of this final polynomial can be observed in the plot below.
 ```{r}
 library(boot)
 set.seed (1)
@@ -228,7 +222,7 @@ for (i in 1:5) {
 predErr
 min(predErr)
 ```
-Using cross validation we find that the model with the smallest validation/prediction error is the final polynomial with degree 5 which agrees with the above plot.
+
 
 
 ### Part F
@@ -242,7 +236,7 @@ ci
 ```
 90% CI: [0.6640983, 1.141839]
 
-This CI says that if we were to repeat the data collection and modeling process multiple times, we would expect the true value of the response variable (when X=1) to fall within this interval in approximately 90% of the cases.
+Our Confidence Interval indicates that in around 90% of cases, the true value of the response variable (when X=1) would lie within this interval if we were to replicate the data collection and modeling process multiple times.
 
 
 ### Part G
@@ -276,8 +270,7 @@ confidence_interval <- quantile(bootstrap_estimates, c(0.05, 0.95))
 confidence_interval
 
 ```
-
-The confidence interval is a range of values that gives us an idea of where the model's prediction at X = 1 is likely to fall. It takes into account the variability in the data and the estimation process using bootstrapping. If we were to repeat the bootstrapping procedure multiple times, around 90% of the confidence intervals calculated would include the true value of the model's prediction at X = 1. The lower bound of the interval represents the estimated minimum value, while the upper bound represents the estimated maximum value. In simpler terms, the confidence interval provides a range within which we can reasonably expect the model's prediction at X = 1 to lie.
+The confidence interval provides valuable insights into the likely range of the model's prediction at X = 1. It takes into consideration the data's variability and the estimation process through bootstrapping. Upon repeating the bootstrapping procedure multiple times, approximately 90% of the calculated confidence intervals would encompass the true value of the model's prediction at X = 1. The lower bound of the interval represents the estimated minimum value, while the upper bound represents the estimated maximum value. In simpler terms, the confidence interval offers a reasonable range within which we can anticipate the model's prediction at X = 1 to fall.
 
 ## Question 4 
 
@@ -311,7 +304,7 @@ exp(coefficients(logRegMulti))
 ```
 $\beta_4$ = 8.451e-03 corresponding to Top10perc
 
-The coefficient for the variable Top10perc indicates that a one-unit increase in Top10perc is associated with an expected increase of approximately 0.008451 in the log-odds of the outcome variable. However, it's important to note that this estimate does not reach statistical significance, suggesting that the observed relationship between Top10perc and the outcome variable may not be meaningful or distinguishable from random variation. 
+The coefficient for the variable Top10perc suggests that a one-unit increase in Top10perc is expected to result in a logarithmic odds increase of around 0.008451 for the outcome variable. However, it is crucial to highlight that this estimate does not achieve statistical significance. This lack of significance implies that the observed relationship between Top10perc and the outcome variable may not hold any meaningful or distinguishable pattern from random variation.
 
 ### Part C
 
@@ -468,8 +461,7 @@ print(test_error)
 ### Part G
 
 *Pick which model you think is the best and explain your choice.*
-
-Logistic Regression has the lowest prediction error, therefor it is the best choice of model to predict whether a school is Private or not. LDA is hugely sensitive to non-gaussian data so it makes sense that this would not be a good choice. 
+Among the models considered, Logistic Regression demonstrates the lowest prediction error, indicating its superior performance in predicting whether a school is private or not. Therefore, Logistic Regression is the recommended choice for this particular prediction task. On the other hand, Linear Discriminant Analysis (LDA) is known to be highly sensitive to non-Gaussian data. Given this characteristic, it becomes apparent that LDA may not be the optimal choice for the task at hand, as it may struggle to effectively handle datasets that deviate from Gaussian distribution assumptions. Thus, based on the performance and sensitivity considerations, Logistic Regression emerges as the preferable model, while LDA may not be suitable given its limitations with non-Gaussian data.
 
 
 ## Question 5
@@ -505,9 +497,11 @@ cpov
 ```{r}
 pca$rotation
 ```
-Principal Component 1 places the largest weights on Eggs, Cereal, and Nuts. This principal component basically describes a diet that is high in protein and fat (nuts and eggs) as well as carbohydrates (cereals). These three features account for the most variation in the data, specifically 44.5% of the variation in the data, so they are given the larger magnitudes in the first principal component. 
+Principal Component 1 captures the largest weights for Eggs, Cereal, and Nuts, indicating their strong influence in shaping this component. This principal component essentially represents a dietary pattern characterized by a high intake of protein and fat (represented by nuts and eggs), as well as carbohydrates (represented by cereals). These three features contribute significantly to the overall variation in the data, accounting for approximately 44.5% of the total variation. Hence, they hold greater importance and exhibit larger magnitudes in the first principal component.
 
-Principal Component 2 places the largest weights on fish, fruits/vegetables, and maybe even starch, and less on the rest of the features. This principal component seems to describe a diet that's high in some natural sources of nutrients (particularly vitamins, minerals, and fiber). These three features account for about 18.2% of the variation in the data.
+Moving on to Principal Component 2, it assigns considerable weights to fish, fruits/vegetables, and potentially starch, while placing less emphasis on the remaining features. This particular principal component appears to describe a dietary pattern that emphasizes the consumption of natural sources of essential nutrients, such as vitamins, minerals, and fiber. The three mentioned features play a significant role in shaping this component. Collectively, they contribute to around 18.2% of the total variation in the data, indicating their moderate impact.
+
+In summary, Principal Component 1 captures a diet with a high protein, fat, and carbohydrate content, while Principal Component 2 represents a diet that prioritizes natural nutrient sources like fish, fruits/vegetables, and potentially starch. These components account for a substantial proportion of the overall data variation, further emphasizing their relevance in understanding dietary patterns.
 
 ##### (c) Create a biplot for the first two principal components. Based on this plot, which variable(s) is Milk most correlated with? Which variable(s) is Milk most negatively correlated with? Which variables is Milk uncorrelated with?
 
@@ -523,9 +517,9 @@ Observations corresponding to the North and Central Region:
 * North: 6, 8, 15, 20
 * Central: 2, 3, 5, 7, 9, 11, 12, 14, 16, 21, 22, 23, 24
 
-Looking at where the observations from the North Region are, it seems they are all in the negative portion of PC1 and are in both the negative and positive portions of PC2. The negative portion of PC1 and PC2 seems to have more meat and other animal-based proteins, thus we can say the North Region likes these protein sources. There are also two observations in the negative PC1 and positive PC2 area, and it seems to have more on starches and fishes, thus we can say the North Region also likes starch and a little of fish based proteins.
+When examining the observations from the North Region, it becomes apparent that they predominantly fall within the negative portion of PC1, indicating a preference for meat and other animal-based proteins. However, when considering PC2, the observations from the North Region are distributed across both the negative and positive portions. The negative portion of PC1 and PC2 tends to feature more meat and animal-based proteins, suggesting that the North Region favors these protein sources. Additionally, there are two observations located in the negative PC1 and positive PC2 region, indicating a preference for starches and fish-based proteins in the North Region.
 
-Looking at where the observations from the Central Region are, it seems like a majority of them are in the negative portion of PC1 and PC2, meaning they also prefer meat and other animal-based proteins, much like the North Region. Similar to some observations of the North Region, the Central Region also contain observations in the negative PC1 and positive PC2 areas, so we could say they also like starch and fish for protein sources. One observation (16) is closer to the fruits/vegetable principal component vector, perhaps one of the difference here is they also like proteins from fruits/vegetables. The other difference is that the Central Region contains two observations in the positive PC1 and negative PC2 area, which none of the observations from the North Region are found in. This area is dominated by a single principal component vector `Cereal`, so it seems like the Central Region also prefers protein sources from cereal, albeit in smaller percentages since only two observations are found here.
+Shifting focus to the Central Region, a majority of its observations align with the negative portion of both PC1 and PC2, indicating a similar preference for meat and animal-based proteins as observed in the North Region. Similar to the North Region, the Central Region also contains observations in the negative PC1 and positive PC2 region, suggesting a liking for starches and fish-based proteins. Interestingly, one observation (16) is positioned closer to the principal component vector representing fruits/vegetables, indicating a potential preference for proteins derived from fruits and vegetables in the Central Region. Another distinguishing factor is that the Central Region includes two observations in the positive PC1 and negative PC2 region, which is not observed in any of the North Region observations. This region is primarily influenced by the principal component vector representing `Cereal`, suggesting a preference for protein sources derived from cereals, although to a lesser extent since only two observations are located in this region.
 
 # Conceptual Problems
 
@@ -533,25 +527,26 @@ Looking at where the observations from the Central Region are, it seems like a m
 
 *Explain why the bootstrap may be more beneficial for random forest than it would be for linear regression.*
 
-  Random forest models can handle high-dimensional data where linear regression may suffer from overfitting or high variance in the case where number of observations is smaller than the number of features. Using a bootstrap sample in random forests helps to mitigate this issue of overfitting by creating subsets of the data during each tree's construction.
+The bootstrap resampling technique provides unique benefits for random forest models but has limited impact on linear regression models. Random forest combines multiple decision trees, each trained on a bootstrap sample created by randomly selecting data from the original dataset. This process allows random forest to create diverse decision trees with different training sets, capturing more variability in the data and improving model performance.
 
-******* ??? Random forest is a non-parametric algorithm capable of capturing nonlinear relationships and interactions between variables. Linear regression assumes a linear relationship between predictors and the response, which may not adequately capture complex patterns present in the data. The bootstrap sampling used in random forests allows each tree to learn different aspects of the data, enabling the model to capture nonlinearity and interactions more effectively.
+On the other hand, linear regression models, which assume a linear relationship between predictors and the response variable, do not gain significant advantages from the bootstrap. While the bootstrap can help estimate the uncertainty of regression coefficients, it does not fundamentally change the underlying linear relationship assumed by the model. The bootstrap's benefits are more evident in complex models with overfitting issues or a large number of parameters, which are less prominent in linear regression.
 
-  In the case where our features have high correlation, linear regression models may return unreliable coefficient estimates. Random forests can overcome this correlation problem randomly subsets of predictors at each split, reducing the impact of highly correlated variables. Bootstrapping further enhances this capability by sampling from the original data set (with replacement) and thus creating diverse subsets of the data. 
-
-
+To summarize, the bootstrap is particularly beneficial for random forest models as it enables aggregation of diverse models, enhances robustness, and handles high-dimensional data. In contrast, the impact of the bootstrap on linear regression models is less pronounced due to the absence of model aggregation, the linearity assumption, and the relative simplicity of the model.
+ 
 ## Question 7
 
 *Give an example of a scenario where you test multiple hypotheses but would not want to corect for FEWR or FDR.*
 
-  We may want to abstain from correcting for FWER or FDR if we are in the initial stages of a data research project. At this stage of data science, we many simply be looking to identify patterns in the data and may not yet have concrete hypotheses we are interested in testing. During exploratory data analysis it is our job to test multiple hypotheses and then decide which of them we are most interested in confirming or rejecting. At this point it is not our goal to restrict error rates since doing so could also restrict our ability to fully explore the data. It does not make sense to confine hypotheses conclusions such as Type-1/2 error when we have not yet established the specific claims we wish to test. 
+  During the early stages of a data research project, it is often best to avoid correcting for error rates like FWER or FDR. This phase is focused on exploring the data and identifying patterns, rather than testing specific hypotheses. The goal is to generate multiple hypotheses and decide which ones are worth investigating further. At this stage, strict control of error rates is unnecessary as it can restrict the flexibility needed to fully explore and understand the data. By not correcting for FWER or FDR, we have more freedom to generate hypotheses and analyze the data, allowing for a broader exploration of potential relationships and patterns. Correcting for error rates assumes that we already have well-defined hypotheses and specific claims to test. However, during the initial stages, we are still in the process of formulating these claims. It would be premature to confine our conclusions to specific error rates when we haven't established the hypotheses we want to test.
+
+In summary, during the early stages of a data research project, it is often better to prioritize exploratory analysis and hypothesis generation over strict control of error rates. This approach allows for a more comprehensive exploration of the data and the identification of promising avenues for further investigation.
 
 
 ## Question 8
 
 *Why is it necessary to be aware of a model’s assumptions, and check those assumptions before using the trained model for inference or prediction?*
 
-  Violating model assumptions can lead to biased parameter estimates and incorrect hypothesis tests and confidence intervals. When it comes to inference and prediction, validating these assumptions assures we can construct a reliable model to fit our data. The prediction accuracy of a model may suffer if it's assumptions are not met. 
+It is crucial to meet the assumptions of statistical models to ensure accurate results, as violating these assumptions can lead to biased estimates, incorrect hypothesis tests, and unreliable confidence intervals. These assumptions are made to ensure the validity of the model and its predictions, and when they are violated, the model fails to accurately represent the data, resulting in biased parameter estimates and potentially incorrect conclusions. Violating assumptions also affects hypothesis tests and confidence intervals, rendering them inaccurate or unreliable. Additionally, prediction accuracy is compromised when assumptions are violated, as models are built based on certain assumptions about variables and data distribution. 
   
 
 
